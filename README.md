@@ -1,1 +1,1 @@
-![enzo](/Sayem234.github.io/docs/assets/bo.JPG)
+![enzo](/Sayem234.github.io/assets/bo.JPG)
