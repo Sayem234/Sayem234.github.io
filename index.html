@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ProTool</title>
+  <title>PLUS ADDER</title>
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Telegram Web App SDK -->
@@ -13,7 +13,7 @@
   <div class="min-h-screen flex items-center justify-center p-4">
     <div class="bg-white shadow-xl rounded-2xl p-6 w-full max-w-lg">
       <h1 class="text-2xl font-bold mb-4 text-center">PLUS ADDER</h1>
-      <p class="text-sm text-gray-600 mb-4 text-center">Upload a text file or paste text to add  <span class="font-mono">+</span> Plus</p>
+      <p class="text-sm text-gray-600 mb-4 text-center">Upload any text file or paste text to add <span class="font-mono">+</span> Plus.</p>
       <div class="space-y-4">
         <label class="block">
           <span class="sr-only">Choose file</span>
@@ -93,7 +93,7 @@
     document.addEventListener('DOMContentLoaded', () => {
       const downloadLink = document.getElementById('downloadLink');
       downloadLink.addEventListener('click', () => {
-        // Delay sending data until after download triggered
+        alert('Download triggered. Sending text to bot...');
         setTimeout(() => {
           if (window.Telegram && Telegram.WebApp) {
             Telegram.WebApp.sendData(latestProcessed);
