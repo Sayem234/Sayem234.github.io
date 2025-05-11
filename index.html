@@ -65,7 +65,7 @@
       } else if (textArea.value.trim()) {
         const lines = textArea.value.split(/\r?\n/).filter(Boolean);
         latestProcessed = lines.map(line => `+${line.trim()}`).join("\n");
-        latestFilename = 'plus_added_text.txt';
+        latestFilename = 'plus_added.txt';
 
         outputText.value = latestProcessed;
         outputText.classList.remove('hidden');
