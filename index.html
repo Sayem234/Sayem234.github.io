@@ -3,21 +3,23 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PLUS ADDER</title>
+  <title>+ Line Prefix Tool</title>
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Telegram Web App SDK -->
   <script async src="https://telegram.org/js/telegram-web-app.js"></script>
+  <!-- SheetJS for Excel parsing -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body class="bg-gray-100 text-gray-800">
   <div class="min-h-screen flex items-center justify-center p-4">
     <div class="bg-white shadow-xl rounded-2xl p-6 w-full max-w-lg">
-      <h1 class="text-2xl font-bold mb-4 text-center">PLUS ADDER</h1>
-      <p class="text-sm text-gray-600 mb-4 text-center">Upload any text file or paste text to add <span class="font-mono">+</span> Plus.</p>
+      <h1 class="text-2xl font-bold mb-4 text-center">+ Line Prefix Tool</h1>
+      <p class="text-sm text-gray-600 mb-4 text-center">Upload a text file or Excel file (.xlsx) or paste text to add a <span class="font-mono">+</span> prefix to each line.</p>
       <div class="space-y-4">
         <label class="block">
           <span class="sr-only">Choose file</span>
-          <input type="file" id="fileInput" class="block w-full text-sm text-gray-500 file:py-2 file:px-4 file:border file:border-gray-300 file:rounded-md file:text-sm file:font-semibold file:bg-gray-50 hover:file:bg-gray-100" accept=".txt,.csv,.md,.json">
+          <input type="file" id="fileInput" class="block w-full text-sm text-gray-500 file:py-2 file:px-4 file:border file:border-gray-300 file:rounded-md file:text-sm file:font-semibold file:bg-gray-50 hover:file:bg-gray-100">
         </label>
         <textarea id="textInput" rows="6" placeholder="Or paste text here..." class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"></textarea>
         <button onclick="process()" class="w-full py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition">Process</button>
@@ -32,7 +34,7 @@
 
   <script>
     let latestProcessed = '';
-    let latestFilename = 'plus_added.txt';
+    let latestFilename = 'plus_added_text.txt';
 
     function process() {
       const fileInput = document.getElementById('fileInput');
@@ -42,30 +44,64 @@
       const downloadLink = document.getElementById('downloadLink');
 
       if (fileInput.files.length > 0) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          const content = e.target.result;
-          const lines = content.split(/\r?\n/).filter(Boolean);
-          latestProcessed = lines.map(line => `+${line.trim()}`).join("\n");
-          latestFilename = `plus_added_${fileInput.files[0].name.split('.')[0] || 'output'}.txt`;
+        const file = fileInput.files[0];
+        const extension = file.name.split('.').pop().toLowerCase();
 
-          outputText.value = latestProcessed;
-          outputText.classList.remove('hidden');
+        if (extension === 'xlsx') {
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+            const rows = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+            const lines = rows.flat().filter(Boolean);
+            latestProcessed = lines.map(line => `+${line}`).join("\n");
+            latestFilename = `plus_added_${file.name.split('.')[0]}.txt`;
 
-          const blob = new Blob([latestProcessed], { type: 'text/plain' });
-          const url = URL.createObjectURL(blob);
-          downloadLink.href = url;
-          downloadLink.download = latestFilename;
-          downloadLink.textContent = `Download ${latestFilename}`;
-          downloadLink.classList.remove('hidden');
+            outputText.value = latestProcessed;
+            outputText.classList.remove('hidden');
 
-          actionButtons.classList.remove('hidden');
-        };
-        reader.readAsText(fileInput.files[0]);
+            const blob = new Blob([latestProcessed], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            downloadLink.href = url;
+            downloadLink.download = latestFilename;
+            downloadLink.textContent = `Download ${latestFilename}`;
+            downloadLink.classList.remove('hidden');
+
+            actionButtons.classList.remove('hidden');
+          };
+          reader.readAsArrayBuffer(file);
+
+        } else if (["txt", "csv", "json", "md"].includes(extension)) {
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            const content = e.target.result;
+            const lines = content.split(/\r?\n/).filter(Boolean);
+            latestProcessed = lines.map(line => `+${line.trim()}`).join("\n");
+            latestFilename = `plus_added_${file.name.split('.')[0] || 'output'}.txt`;
+
+            outputText.value = latestProcessed;
+            outputText.classList.remove('hidden');
+
+            const blob = new Blob([latestProcessed], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            downloadLink.href = url;
+            downloadLink.download = latestFilename;
+            downloadLink.textContent = `Download ${latestFilename}`;
+            downloadLink.classList.remove('hidden');
+
+            actionButtons.classList.remove('hidden');
+          };
+          reader.readAsText(file);
+        } else {
+          alert("Unsupported file format. Please upload a .txt, .csv, .json, .md, or .xlsx file.");
+          return;
+        }
+
       } else if (textArea.value.trim()) {
         const lines = textArea.value.split(/\r?\n/).filter(Boolean);
         latestProcessed = lines.map(line => `+${line.trim()}`).join("\n");
-        latestFilename = 'plus_added.txt';
+        latestFilename = 'plus_added_text.txt';
 
         outputText.value = latestProcessed;
         outputText.classList.remove('hidden');
@@ -89,7 +125,6 @@
       });
     }
 
-    // Override download link click to also send to Telegram bot via WebApp
     document.addEventListener('DOMContentLoaded', () => {
       const downloadLink = document.getElementById('downloadLink');
       downloadLink.addEventListener('click', () => {
