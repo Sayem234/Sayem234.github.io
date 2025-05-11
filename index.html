@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>+ Line Prefix Tool</title>
+  <title>ProTool</title>
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Telegram Web App SDK -->
@@ -12,8 +12,8 @@
 <body class="bg-gray-100 text-gray-800">
   <div class="min-h-screen flex items-center justify-center p-4">
     <div class="bg-white shadow-xl rounded-2xl p-6 w-full max-w-lg">
-      <h1 class="text-2xl font-bold mb-4 text-center">+ Line Prefix Tool</h1>
-      <p class="text-sm text-gray-600 mb-4 text-center">Upload any text-based file or paste text to add a <span class="font-mono">+</span> prefix to each line.</p>
+      <h1 class="text-2xl font-bold mb-4 text-center">PLUS ADDER</h1>
+      <p class="text-sm text-gray-600 mb-4 text-center">Upload a text file or paste text to add  <span class="font-mono">+</span> Plus</p>
       <div class="space-y-4">
         <label class="block">
           <span class="sr-only">Choose file</span>
@@ -32,7 +32,7 @@
 
   <script>
     let latestProcessed = '';
-    let latestFilename = 'plus_added_text.txt';
+    let latestFilename = 'plus_added.txt';
 
     function process() {
       const fileInput = document.getElementById('fileInput');
