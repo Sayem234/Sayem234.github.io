@@ -150,7 +150,7 @@
     }
 
     .section-title::before {
-      content: '📚';
+      content: '�';
       font-size: 1.2rem;
     }
 
@@ -427,6 +427,50 @@
         color: var(--text-primary);
     }
 
+    #selectedFilesList {
+        max-height: 200px;
+        overflow-y: auto;
+        padding-right: 10px;
+        margin-top: 1rem;
+    }
+
+    #selectedFilesList .file-item {
+        background: var(--bg-primary);
+        border: 1px solid var(--border-color);
+        padding: 0.75rem 1rem;
+        margin-bottom: 0.5rem;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    #selectedFilesList .file-item .file-name {
+        flex-grow: 1;
+        margin-left: 10px;
+    }
+
+    #selectedFilesList .file-item .remove-file-btn {
+        background: var(--error-color);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+        flex-shrink: 0;
+    }
+
+    #selectedFilesList .file-item .remove-file-btn:hover {
+        background: #dc2626;
+    }
+
+
     .loading {
       display: inline-block;
       width: 20px;
@@ -667,8 +711,16 @@
       </button>
     </div>
 
-    <!-- New Share Resources Section -->
-    <div id="shareResources" class="fade-in" style="margin-top: 2rem;">
+    <!-- Button to toggle Share Resources Section -->
+    <div class="button-group" style="margin-top: 2rem;">
+        <button class="btn-primary" onclick="toggleShareResourcesSection()">
+            <span class="theme-icon">📤</span>
+            <span id="toggleShareText">Share Your Resources</span>
+        </button>
+    </div>
+
+    <!-- New Share Resources Section (initially hidden) -->
+    <div id="shareResources" class="fade-in" style="margin-top: 2rem; display: none;">
         <div class="section-title">Share Your Resources</div>
         <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">Help others by sharing your valuable academic materials.</p>
 
@@ -714,7 +766,9 @@
         <div class="upload-area">
             <label for="fileUpload" style="display: block; margin-bottom: 10px; font-weight: 600; color: var(--text-primary);">Select Files to Upload:</label>
             <input type="file" id="fileUpload" multiple>
-            <div id="selectedFilesPreview" style="margin-top: 1rem; color: var(--text-secondary);">No files selected.</div>
+            <div id="selectedFilesList">
+                <p style="color: var(--text-secondary); margin-top: 1rem;">No files selected.</p>
+            </div>
         </div>
 
         <div class="button-group">
@@ -810,7 +864,7 @@
     // File type icons mapping
     const FILE_ICONS = {
       'pdf': '📄',
-      'doc': '�',
+      'doc': '📝',
       'docx': '📝',
       'ppt': '📊',
       'pptx': '📊',
@@ -844,6 +898,9 @@
     // New Telegram Bot Token and Chat ID for resource sharing
     const SHARE_BOT_TOKEN = "7616102961:AAHqU8SwIZtPCwmx34TqTbmgECHx1h0w4JI";
     const ADMIN_CHAT_ID = "6089812211";
+
+    // Global array to hold selected files for sharing
+    let selectedFilesToShare = [];
 
     // Toast notification function
     function showToast(message, type = "success") {
@@ -1105,6 +1162,20 @@
       }
     }
 
+    // Function to toggle the visibility of the Share Resources section
+    function toggleShareResourcesSection() {
+        const shareSection = document.getElementById("shareResources");
+        const toggleButtonText = document.getElementById("toggleShareText");
+        if (shareSection.style.display === "none" || shareSection.style.display === "") {
+            shareSection.style.display = "block";
+            toggleButtonText.textContent = "Hide Share Resources";
+            shareSection.classList.add("fade-in");
+        } else {
+            shareSection.style.display = "none";
+            toggleButtonText.textContent = "Share Your Resources";
+        }
+    }
+
     // Function to update courses for the share section (similar to fetchFiles)
     async function updateShareCourses() {
         const semester = document.getElementById("shareSemester").value;
@@ -1156,21 +1227,87 @@
 
     // Function to handle file input change and display preview
     document.getElementById("fileUpload").addEventListener("change", function() {
-        const previewDiv = document.getElementById("selectedFilesPreview");
-        if (this.files.length > 0) {
-            let fileNames = Array.from(this.files).map(file => file.name).join(", ");
-            previewDiv.textContent = `Selected files: ${fileNames}`;
-        } else {
-            previewDiv.textContent = "No files selected.";
-        }
+        const newFiles = Array.from(this.files); // Get newly selected files as an array
+
+        // Add new files to selectedFilesToShare, avoiding duplicates by name and size
+        newFiles.forEach(newFile => {
+            const isDuplicate = selectedFilesToShare.some(existingFile => 
+                existingFile.name === newFile.name && existingFile.size === newFile.size
+            );
+            if (!isDuplicate) {
+                selectedFilesToShare.push(newFile);
+            }
+        });
+
+        // Clear the file input's value to allow selecting the same files again (important for 'change' event to fire)
+        this.value = ''; 
+
+        renderSelectedFilesList(); // Call a new function to render the list
     });
+
+    // Function to render the list of selected files for sharing
+    function renderSelectedFilesList() {
+        const selectedFilesListDiv = document.getElementById("selectedFilesList");
+        selectedFilesListDiv.innerHTML = ""; // Clear previous list
+
+        if (selectedFilesToShare.length === 0) {
+            selectedFilesListDiv.innerHTML = '<p style="color: var(--text-secondary); margin-top: 1rem;">No files selected.</p>';
+            return;
+        }
+
+        selectedFilesToShare.forEach((file, index) => {
+            const fileItem = document.createElement("div");
+            fileItem.className = "file-item";
+            
+            const fileIcon = document.createElement("span");
+            fileIcon.className = "file-icon";
+            fileIcon.textContent = getFileIcon(file.name);
+            
+            const fileName = document.createElement("span");
+            fileName.className = "file-name";
+            fileName.textContent = file.name;
+
+            const fileSizeSpan = document.createElement("span");
+            fileSizeSpan.className = "file-size";
+            fileSizeSpan.textContent = formatFileSize(file.size);
+
+            const removeButton = document.createElement("button");
+            removeButton.className = "remove-file-btn";
+            removeButton.textContent = "X";
+            // Use a closure to capture the current file object for removal
+            removeButton.onclick = function() {
+                removeFileFromSelection(file); 
+            };
+
+            fileItem.appendChild(fileIcon);
+            fileItem.appendChild(fileName);
+            fileItem.appendChild(fileSizeSpan);
+            fileItem.appendChild(removeButton);
+            selectedFilesListDiv.appendChild(fileItem);
+        });
+    }
+
+    // Function to remove a file from the selectedFilesToShare array and update the UI
+    function removeFileFromSelection(fileToRemove) {
+        // Find the index of the file to remove
+        const indexToRemove = selectedFilesToShare.findIndex(file => 
+            file.name === fileToRemove.name && file.size === fileToRemove.size && file.lastModified === fileToRemove.lastModified
+        );
+
+        if (indexToRemove > -1) {
+            const removedFileName = selectedFilesToShare[indexToRemove].name;
+            selectedFilesToShare.splice(indexToRemove, 1); // Remove from array
+            renderSelectedFilesList(); // Re-render the list after removal
+            showToast(`"${removedFileName}" removed from selection.`);
+        }
+    }
 
     async function shareResources() {
         const semester = document.getElementById("shareSemester").value;
         const exam = document.getElementById("shareExam").value;
         const filetype = document.getElementById("shareFileType").value;
         const course = document.getElementById("shareCourse").value;
-        const files = document.getElementById("fileUpload").files;
+        const files = selectedFilesToShare; // Use the global array
         const shareBtn = document.getElementById("shareText");
 
         if (!semester || !exam || !filetype || !course || files.length === 0) {
@@ -1186,9 +1323,24 @@
 
         let successUploadCount = 0;
         let failedUploadCount = 0;
+        let largeFileSkippedCount = 0;
+
+        console.log(`Attempting to share ${files.length} file(s).`);
 
         for (let i = 0; i < files.length; i++) {
             const file = files[i];
+            console.log(`Processing file ${i + 1}/${files.length}: ${file.name} (${file.size} bytes)`);
+
+            // Telegram Bot API has a 50MB limit for sendDocument
+            const TELEGRAM_MAX_FILE_SIZE = 50 * 1024 * 1024; 
+            if (file.size > TELEGRAM_MAX_FILE_SIZE) {
+                console.warn(`File ${file.name} (${formatFileSize(file.size)}) is too large for Telegram (max ${formatFileSize(TELEGRAM_MAX_FILE_SIZE)}). Skipping.`);
+                showToast(`Skipped "${file.name}" (too large)`, "warning");
+                largeFileSkippedCount++;
+                failedUploadCount++; // Count as a failed attempt for summary
+                continue;
+            }
+
             const formData = new FormData();
             formData.append("chat_id", ADMIN_CHAT_ID);
             formData.append("document", file);
@@ -1205,9 +1357,10 @@
                     throw new Error(`Failed to send file ${file.name}: ${errorData.description || res.statusText}`);
                 }
                 successUploadCount++;
+                console.log(`Successfully sent file: ${file.name}`);
             } catch (err) {
-                console.error("Error sending shared file to Telegram:", err);
-                showToast(`Error sharing ${file.name}: ${err.message}`, "error");
+                console.error(`Error sending shared file "${file.name}" to Telegram:`, err);
+                showToast(`Error sharing "${file.name}": ${err.message}`, "error");
                 failedUploadCount++;
             }
         }
@@ -1216,17 +1369,22 @@
 
         if (failedUploadCount === 0) {
             showToast(`🎉 Successfully shared ${successUploadCount} file(s)! Thank you!`, "success");
-            // Clear the form after successful upload
-            document.getElementById("shareSemester").value = "";
-            document.getElementById("shareExam").value = "";
-            document.getElementById("shareFileType").value = "";
-            document.getElementById("shareCourse").innerHTML = '<option value="">-- Select Course --</option>';
-            document.getElementById("fileUpload").value = ""; // Clear selected files
-            document.getElementById("selectedFilesPreview").textContent = "No files selected.";
-
         } else {
-            showToast(`⚠️ Shared ${successUploadCount} file(s), but ${failedUploadCount} failed to upload.`, "warning");
+            let message = `⚠️ Shared ${successUploadCount} file(s), but ${failedUploadCount} failed to upload.`;
+            if (largeFileSkippedCount > 0) {
+                message += ` (${largeFileSkippedCount} file(s) skipped due to size)`;
+            }
+            showToast(message, "warning");
         }
+
+        // Clear the form after attempt (whether fully successful or not)
+        document.getElementById("shareSemester").value = "";
+        document.getElementById("shareExam").value = "";
+        document.getElementById("shareFileType").value = "";
+        document.getElementById("shareCourse").innerHTML = '<option value="">-- Select Course --</option>';
+        document.getElementById("fileUpload").value = ""; // Clear selected files
+        document.getElementById("selectedFilesList").innerHTML = '<p style="color: var(--text-secondary); margin-top: 1rem;">No files selected.</p>'; // Clear selected files preview
+        selectedFilesToShare = []; // Clear global array
     }
 
     // Add smooth scroll behavior
@@ -1238,3 +1396,4 @@
   </script>
 </body>
 </html>
+�
