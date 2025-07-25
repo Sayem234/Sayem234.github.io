@@ -57,11 +57,6 @@
       padding: 20px;
       transition: var(--transition);
       line-height: 1.6;
-      overflow-x: hidden;
-    }
-    
-    body.modal-open {
-      overflow: hidden;
     }
 
     .header {
@@ -415,6 +410,23 @@
       display: none;
     }
 
+    .upload-area {
+        background: var(--bg-secondary);
+        padding: 1.5rem;
+        border-radius: 16px;
+        border: 1px solid var(--border-color);
+        margin-bottom: 1.5rem;
+    }
+
+    .upload-area input[type="file"] {
+        width: 100%;
+        padding: 10px;
+        border: 1px dashed var(--border-color);
+        border-radius: 8px;
+        background: var(--bg-primary);
+        color: var(--text-primary);
+    }
+
     .loading {
       display: inline-block;
       width: 20px;
@@ -482,181 +494,6 @@
     .toast.warning {
       border-left: 4px solid var(--warning-color);
     }
-    
-    /* Share Resource Modal Styles */
-    .modal {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.7);
-      z-index: 1000;
-      align-items: center;
-      justify-content: center;
-      overflow-y: auto;
-      padding: 20px;
-    }
-    
-    .modal-content {
-      background: var(--bg-primary);
-      padding: 2rem;
-      border-radius: 20px;
-      box-shadow: var(--shadow-heavy);
-      width: 90%;
-      max-width: 600px;
-      position: relative;
-      max-height: 90vh;
-      overflow-y: auto;
-    }
-    
-    .close-modal {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      font-size: 1.5rem;
-      cursor: pointer;
-      color: var(--text-secondary);
-      transition: var(--transition);
-      z-index: 10;
-    }
-    
-    .close-modal:hover {
-      color: var(--error-color);
-      transform: scale(1.2);
-    }
-    
-    .share-form-group {
-      margin-bottom: 1.5rem;
-    }
-    
-    .share-form-group label {
-      display: block;
-      margin-bottom: 0.5rem;
-      font-weight: 500;
-      color: var(--text-primary);
-    }
-    
-    .share-form-group input,
-    .share-form-group select {
-      width: 100%;
-      padding: 0.8rem 1rem;
-      font-size: 1rem;
-      border: 2px solid var(--border-color);
-      border-radius: 12px;
-      background: var(--bg-primary);
-      color: var(--text-primary);
-      transition: var(--transition);
-    }
-    
-    .share-form-group input:focus,
-    .share-form-group select:focus {
-      outline: none;
-      border-color: var(--primary-color);
-      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
-    }
-    
-    .file-upload {
-      position: relative;
-      display: block;
-      width: 100%;
-      padding: 1.5rem;
-      border: 2px dashed var(--border-color);
-      border-radius: 12px;
-      text-align: center;
-      cursor: pointer;
-      transition: var(--transition);
-    }
-    
-    .file-upload:hover {
-      border-color: var(--primary-color);
-      background: var(--bg-secondary);
-    }
-    
-    .file-upload input[type="file"] {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      opacity: 0;
-      cursor: pointer;
-    }
-    
-    .file-upload-icon {
-      font-size: 2.5rem;
-      margin-bottom: 0.5rem;
-      color: var(--text-secondary);
-    }
-    
-    .file-name-display {
-      margin-top: 1rem;
-      padding: 0.5rem;
-      background: var(--bg-secondary);
-      border-radius: 8px;
-      font-size: 0.9rem;
-      color: var(--text-secondary);
-    }
-    
-    .share-submit-btn {
-      background: linear-gradient(135deg, var(--accent-color), #059669);
-      color: white;
-      width: 100%;
-      padding: 1rem;
-      font-size: 1.1rem;
-      border: none;
-      border-radius: 12px;
-      cursor: pointer;
-      transition: var(--transition);
-      margin-top: 1rem;
-    }
-    
-    .share-submit-btn:hover {
-      transform: translateY(-3px);
-      box-shadow: var(--shadow-heavy);
-    }
-    
-    .share-submit-btn:disabled {
-      background: var(--text-secondary);
-      cursor: not-allowed;
-      transform: none;
-      box-shadow: none;
-    }
-    
-    .share-header {
-      text-align: center;
-      margin-bottom: 1.5rem;
-    }
-    
-    .share-header h3 {
-      font-size: 1.8rem;
-      background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      margin-bottom: 0.5rem;
-    }
-    
-    .share-header p {
-      color: var(--text-secondary);
-    }
-    
-    .optional-badge {
-      background: var(--bg-tertiary);
-      color: var(--text-secondary);
-      font-size: 0.75rem;
-      padding: 2px 8px;
-      border-radius: 12px;
-      margin-left: 8px;
-    }
-    
-    .course-code {
-      font-size: 0.85rem;
-      color: var(--text-secondary);
-      font-weight: 400;
-      margin-top: 3px;
-    }
 
     @media (max-width: 768px) {
       body {
@@ -711,10 +548,6 @@
         flex-direction: row;
         justify-content: space-between;
       }
-      
-      .modal-content {
-        padding: 1.5rem;
-      }
     }
 
     @media (max-width: 480px) {
@@ -763,7 +596,7 @@
 <body>
   <div class="header">
     <h2>University Resource Finder</h2>
-    <p>Find and share academic materials quickly and efficiently</p>
+    <p>Find your academic materials quickly and efficiently</p>
     <div class="theme-toggle" onclick="themeManager.toggle()">
       <span class="theme-icon" id="themeIcon">🌙</span>
     </div>
@@ -815,9 +648,6 @@
       <button class="btn-primary" onclick="fetchFiles()">
         <span id="searchText">Search Resources</span>
       </button>
-      <button class="btn-secondary" onclick="openShareModal()">
-        <span class="theme-icon">📤</span> Share Resource
-      </button>
     </div>
 
     <div id="files">
@@ -836,82 +666,65 @@
         <span id="telegramText">Get on Telegram</span>
       </button>
     </div>
-  </div>
 
-  <!-- Share Resource Modal -->
-  <div class="modal" id="shareModal">
-    <div class="modal-content">
-      <span class="close-modal" onclick="closeShareModal()">&times;</span>
-      
-      <div class="share-header">
-        <h3>Share a Resource</h3>
-        <p>Contribute to the university community by sharing materials</p>
-      </div>
-      
-      <form id="shareForm">
-        <div class="share-form-group">
-          <label for="shareSemester">Semester</label>
-          <select id="shareSemester" required onchange="updateShareCourses()">
-            <option value="">-- Select Semester --</option>
-            <option value="Semester1">Semester 1</option>
-            <option value="Semester2">Semester 2</option>
-            <option value="Semester3">Semester 3</option>
-            <option value="Semester4">Semester 4</option>
-            <option value="Semester5">Semester 5</option>
-            <option value="Semester6">Semester 6</option>
-            <option value="Semester7">Semester 7</option>
-            <option value="Semester8">Semester 8</option>
-          </select>
+    <!-- New Share Resources Section -->
+    <div id="shareResources" class="fade-in" style="margin-top: 2rem;">
+        <div class="section-title">Share Your Resources</div>
+        <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">Help others by sharing your valuable academic materials.</p>
+
+        <div class="selectors">
+            <div class="select-wrapper">
+                <select id="shareSemester">
+                    <option value="">-- Select Semester --</option>
+                    <option value="Semester1">Semester 1</option>
+                    <option value="Semester2">Semester 2</option>
+                    <option value="Semester3">Semester 3</option>
+                    <option value="Semester4">Semester 4</option>
+                    <option value="Semester5">Semester 5</option>
+                    <option value="Semester6">Semester 6</option>
+                    <option value="Semester7">Semester 7</option>
+                    <option value="Semester8">Semester 8</option>
+                </select>
+            </div>
+
+            <div class="select-wrapper">
+                <select id="shareExam">
+                    <option value="">-- Select Exam Type --</option>
+                    <option value="Mid">Mid Term</option>
+                    <option value="Final">Final Exam</option>
+                </select>
+            </div>
+
+            <div class="select-wrapper">
+                <select id="shareFileType">
+                    <option value="">-- Select File Type --</option>
+                    <option value="Notes">📝 Notes</option>
+                    <option value="CourseMaterials">📚 Course Materials</option>
+                    <option value="PreviousQuestions">❓ Previous Questions</option>
+                </select>
+            </div>
+
+            <div class="select-wrapper">
+                <select id="shareCourse">
+                    <option value="">-- Select Course --</option>
+                </select>
+            </div>
         </div>
-        
-        <div class="share-form-group">
-          <label for="shareCourse">Course</label>
-          <select id="shareCourse" required>
-            <option value="">-- Select Course --</option>
-          </select>
+
+        <div class="upload-area">
+            <label for="fileUpload" style="display: block; margin-bottom: 10px; font-weight: 600; color: var(--text-primary);">Select Files to Upload:</label>
+            <input type="file" id="fileUpload" multiple>
+            <div id="selectedFilesPreview" style="margin-top: 1rem; color: var(--text-secondary);">No files selected.</div>
         </div>
-        
-        <div class="share-form-group">
-          <label for="shareExam">Exam Type</label>
-          <select id="shareExam" required>
-            <option value="">-- Select Exam Type --</option>
-            <option value="Mid">Mid Term</option>
-            <option value="Final">Final Exam</option>
-          </select>
+
+        <div class="button-group">
+            <button class="btn-primary" onclick="shareResources()">
+                <span class="theme-icon">📤</span>
+                <span id="shareText">Share Resources</span>
+            </button>
         </div>
-        
-        <div class="share-form-group">
-          <label for="shareResourceType">Resource Type</label>
-          <select id="shareResourceType" required onchange="handleResourceTypeChange()">
-            <option value="">-- Select Resource Type --</option>
-            <option value="Notes">📝 Notes</option>
-            <option value="CourseMaterials">📚 Course Materials</option>
-            <option value="PreviousQuestions">❓ Previous Questions</option>
-          </select>
-        </div>
-        
-        <div class="share-form-group">
-          <label for="shareTelegram">Telegram Username 
-            <span class="optional-badge">Optional</span>
-          </label>
-          <input type="text" id="shareTelegram" placeholder="Enter your Telegram username (e.g. @username)">
-        </div>
-        
-        <div class="share-form-group">
-          <label>Upload File (Max 20MB)</label>
-          <div class="file-upload">
-            <div class="file-upload-icon">📁</div>
-            <p>Click to select a file or drag it here</p>
-            <input type="file" id="shareFile" accept=".pdf,.doc,.docx,.ppt,.pptx,.txt,.jpg,.jpeg,.png" required>
-            <div class="file-name-display" id="fileNameDisplay">No file selected</div>
-          </div>
-        </div>
-        
-        <button type="button" class="share-submit-btn" onclick="submitResource()" id="shareSubmitBtn">
-          <span id="shareSubmitText">Share Resource</span>
-        </button>
-      </form>
     </div>
+
   </div>
 
   <div class="toast" id="toast"></div>
@@ -992,10 +805,12 @@
       }
     }
 
+    const themeManager = new ThemeManager(); // Initialize themeManager globally
+
     // File type icons mapping
     const FILE_ICONS = {
       'pdf': '📄',
-      'doc': '📝',
+      'doc': '�',
       'docx': '📝',
       'ppt': '📊',
       'pptx': '📊',
@@ -1019,36 +834,16 @@
       'default': '📁'
     };
 
-    // Course mapping with codes
-    const COURSE_MAPPING = {
-      "Mathematics I": "MATH101",
-      "Physics I": "PHYS101",
-      "Chemistry": "CHEM101",
-      "Programming Fundamentals": "CSE101",
-      "Discrete Mathematics": "CSE102",
-      "Data Structures": "CSE201",
-      "Algorithms": "CSE202",
-      "Database Systems": "CSE301",
-      "Operating Systems": "CSE302",
-      "Computer Networks": "CSE401",
-      "Software Engineering": "CSE402",
-      "Artificial Intelligence": "CSE501",
-      "Machine Learning": "CSE502"
-    };
-
     // Original functionality preserved
     const GITHUB_USERNAME = "11UCRES";
     const REPO_NAME = "cse";
-    
-    // Admin chat ID
-    const ADMIN_CHAT_ID = "6089812211";
-    const BOT_TOKEN = "7616102961:AAHqU8SwIZtPCwmx34TqTbmgECHx1h0w4JI";//"7864007481:AAGxgH0CVpZD9Dp0Yc4v91LqNcZTEdoRwak";
 
     const tg = window.Telegram.WebApp;
     tg.expand();
 
-    // Initialize theme manager
-    const themeManager = new ThemeManager();
+    // New Telegram Bot Token and Chat ID for resource sharing
+    const SHARE_BOT_TOKEN = "7616102961:AAHqU8SwIZtPCwmx34TqTbmgECHx1h0w4JI";
+    const ADMIN_CHAT_ID = "6089812211";
 
     // Toast notification function
     function showToast(message, type = "success") {
@@ -1096,70 +891,13 @@
           if (item.type === "dir") {
             const opt = document.createElement("option");
             opt.value = item.name;
-            const courseCode = COURSE_MAPPING[item.name] || "COURSE";
-            opt.innerHTML = `📖 ${item.name} <span class="course-code">${courseCode}</span>`;
+            opt.textContent = `📖 ${item.name}`;
             courseSelect.appendChild(opt);
           }
         });
       } catch (err) {
         console.error("Error loading course folders:", err);
         courseSelect.innerHTML = '<option value="">❌ Error loading courses</option>';
-      }
-    }
-
-    // Function to update courses in the share modal
-    async function updateShareCourses() {
-      const semester = document.getElementById("shareSemester").value;
-      const courseSelect = document.getElementById("shareCourse");
-      
-      // Add loading animation
-      courseSelect.innerHTML = '<option value="">🔄 Loading courses...</option>';
-
-      if (!semester) {
-        courseSelect.innerHTML = '<option value="">-- Select Course --</option>';
-        return;
-      }
-
-      // For Previous Questions, we'll handle separately in the resource type change
-      const apiUrl = `https://api.github.com/repos/${GITHUB_USERNAME}/${REPO_NAME}/contents/${semester}`;
-      try {
-        const res = await fetch(apiUrl);
-        if (!res.ok) throw new Error("Could not fetch course list.");
-        const data = await res.json();
-
-        courseSelect.innerHTML = '<option value="">-- Select Course --</option>';
-        data.forEach(item => {
-          if (item.type === "dir") {
-            const opt = document.createElement("option");
-            opt.value = item.name;
-            const courseCode = COURSE_MAPPING[item.name] || "COURSE";
-            opt.innerHTML = `📖 ${item.name} <span class="course-code">${courseCode}</span>`;
-            courseSelect.appendChild(opt);
-          }
-        });
-      } catch (err) {
-        console.error("Error loading course folders:", err);
-        courseSelect.innerHTML = '<option value="">❌ Error loading courses</option>';
-      }
-    }
-
-    // Handle resource type change in share modal
-    function handleResourceTypeChange() {
-      const resourceType = document.getElementById("shareResourceType").value;
-      const courseSelect = document.getElementById("shareCourse");
-      
-      if (resourceType === "PreviousQuestions") {
-        // Set course to Previous Questions and disable
-        courseSelect.innerHTML = '<option value="PreviousQuestions">❓ Previous Questions</option>';
-        courseSelect.disabled = true;
-      } else {
-        // Re-enable course selection and reload courses
-        courseSelect.disabled = false;
-        if (document.getElementById("shareSemester").value) {
-          updateShareCourses();
-        } else {
-          courseSelect.innerHTML = '<option value="">-- Select Semester First --</option>';
-        }
       }
     }
 
@@ -1311,6 +1049,7 @@
       telegramBtn.innerHTML = '<span class="loading"></span> Sending...';
       
       const user_id = window.Telegram.WebApp.initDataUnsafe?.user?.id;
+      const botToken = "7864007481:AAGxgH0CVpZD9Dp0Yc4v91LqNcZTEdoRwak"; // This is the original bot token for fetching
 
       let successCount = 0;
       let errorCount = 0;
@@ -1328,7 +1067,7 @@
           continue;
         }
 
-        const sendUrl = `https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`;
+        const sendUrl = `https://api.telegram.org/bot${botToken}/sendDocument`;
         const payload = {
           chat_id: user_id,
           document: fileUrl,
@@ -1365,114 +1104,129 @@
         showToast(message, "error");
       }
     }
-    
-    // New functions for sharing resources
-    function openShareModal() {
-      document.getElementById('shareModal').style.display = 'flex';
-      document.body.classList.add('modal-open');
-      
-      // Pre-fill Telegram username with actual Telegram username if available
-      const user = window.Telegram.WebApp.initDataUnsafe?.user;
-      if (user && user.username) {
-        document.getElementById('shareTelegram').value = `@${user.username}`;
-      }
-    }
-    
-    function closeShareModal() {
-      document.getElementById('shareModal').style.display = 'none';
-      document.body.classList.remove('modal-open');
-      // Reset form
-      document.getElementById('shareForm').reset();
-      document.getElementById('fileNameDisplay').textContent = 'No file selected';
-      document.getElementById('shareCourse').disabled = false;
-    }
-    
-    // Handle file selection display
-    document.getElementById('shareFile').addEventListener('change', function(e) {
-      const fileNameDisplay = document.getElementById('fileNameDisplay');
-      if (this.files.length > 0) {
-        const file = this.files[0];
-        fileNameDisplay.textContent = `${file.name} (${formatFileSize(file.size)})`;
-      } else {
-        fileNameDisplay.textContent = 'No file selected';
-      }
-    });
-    
-    async function submitResource() {
-      const semester = document.getElementById('shareSemester').value;
-      const course = document.getElementById('shareCourse').value;
-      const exam = document.getElementById('shareExam').value;
-      const resourceType = document.getElementById('shareResourceType').value;
-      const telegramUsername = document.getElementById('shareTelegram').value;
-      const fileInput = document.getElementById('shareFile');
-      const submitBtn = document.getElementById('shareSubmitBtn');
-      const submitText = document.getElementById('shareSubmitText');
-      
-      // Validate form
-      if (!semester || !course || !exam || !resourceType || !fileInput.files[0]) {
-        showToast('Please fill all required fields and select a file', 'error');
-        return;
-      }
-      
-      const file = fileInput.files[0];
-      
-      // Check file size
-      if (file.size > 20 * 1024 * 1024) {
-        showToast('File size exceeds 20MB limit', 'error');
-        return;
-      }
-      
-      // Update button to show loading
-      submitBtn.disabled = true;
-      submitText.innerHTML = '<span class="loading"></span> Sending...';
-      
-      // Create form data
-      const formData = new FormData();
-      formData.append('document', file);
-      
-      // Get actual Telegram username if available
-      const user = window.Telegram.WebApp.initDataUnsafe?.user;
-      const actualUsername = user && user.username ? `@${user.username}` : null;
-      const displayUsername = telegramUsername || actualUsername || 'Anonymous';
-      
-      // Get course code
-      const courseCode = COURSE_MAPPING[course] || "COURSE";
-      
-      // Create caption with resource details
-      const caption = `📤 New Resource Submission\n\n` +
-                     `👤 From: ${displayUsername}\n` +
-                     `📅 Semester: ${semester}\n` +
-                     `📚 Course: ${course} (${courseCode})\n` +
-                     `📝 Exam Type: ${exam}\n` +
-                     `📁 Resource Type: ${resourceType}\n` +
-                     `📄 File: ${file.name}`;
-      
-      formData.append('caption', caption);
-      formData.append('chat_id', ADMIN_CHAT_ID);
-      
-      try {
-        // Send to Telegram bot
-        const response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`, {
-          method: 'POST',
-          body: formData
-        });
-        
-        const result = await response.json();
-        
-        if (result.ok) {
-          showToast('✅ Resource submitted successfully! Thank you!', 'success');
-          closeShareModal();
-        } else {
-          showToast('⚠️ Failed to submit resource. Please try again.', 'error');
+
+    // Function to update courses for the share section (similar to fetchFiles)
+    async function updateShareCourses() {
+        const semester = document.getElementById("shareSemester").value;
+        const exam = document.getElementById("shareExam").value;
+        const filetype = document.getElementById("shareFileType").value;
+        const courseSelect = document.getElementById("shareCourse");
+
+        courseSelect.innerHTML = '<option value="">🔄 Loading courses...</option>';
+
+        if (!semester || !exam || !filetype) {
+            courseSelect.innerHTML = '<option value="">-- Select Course --</option>';
+            return;
         }
-      } catch (error) {
-        console.error('Error submitting resource:', error);
-        showToast('⚠️ An error occurred. Please try again later.', 'error');
-      } finally {
-        // Reset button
-        submitBtn.disabled = false;
-        submitText.textContent = 'Share Resource';
-      }
+
+        if (filetype === "PreviousQuestions") {
+            const opt = document.createElement("option");
+            opt.value = "PreviousQuestions";
+            opt.textContent = "❓ Previous Questions";
+            courseSelect.innerHTML = '<option value="">-- Select Course --</option>';
+            courseSelect.appendChild(opt);
+            return;
+        }
+
+        const apiUrl = `https://api.github.com/repos/${GITHUB_USERNAME}/${REPO_NAME}/contents/${semester}/${exam}`;
+        try {
+            const res = await fetch(apiUrl);
+            if (!res.ok) throw new Error("Could not fetch course list.");
+            const data = await res.json();
+
+            courseSelect.innerHTML = '<option value="">-- Select Course --</option>';
+            data.forEach(item => {
+                if (item.type === "dir") {
+                    const opt = document.createElement("option");
+                    opt.value = item.name;
+                    opt.textContent = `📖 ${item.name}`;
+                    courseSelect.appendChild(opt);
+                }
+            });
+        } catch (err) {
+            console.error("Error loading course folders for sharing:", err);
+            courseSelect.innerHTML = '<option value="">❌ Error loading courses</option>';
+        }
+    }
+
+    // Event listeners for share selects to update courses
+    document.getElementById("shareSemester").addEventListener("change", updateShareCourses);
+    document.getElementById("shareExam").addEventListener("change", updateShareCourses);
+    document.getElementById("shareFileType").addEventListener("change", updateShareCourses);
+
+    // Function to handle file input change and display preview
+    document.getElementById("fileUpload").addEventListener("change", function() {
+        const previewDiv = document.getElementById("selectedFilesPreview");
+        if (this.files.length > 0) {
+            let fileNames = Array.from(this.files).map(file => file.name).join(", ");
+            previewDiv.textContent = `Selected files: ${fileNames}`;
+        } else {
+            previewDiv.textContent = "No files selected.";
+        }
+    });
+
+    async function shareResources() {
+        const semester = document.getElementById("shareSemester").value;
+        const exam = document.getElementById("shareExam").value;
+        const filetype = document.getElementById("shareFileType").value;
+        const course = document.getElementById("shareCourse").value;
+        const files = document.getElementById("fileUpload").files;
+        const shareBtn = document.getElementById("shareText");
+
+        if (!semester || !exam || !filetype || !course || files.length === 0) {
+            showToast("Please select all fields and at least one file to share", "error");
+            return;
+        }
+
+        shareBtn.innerHTML = '<span class="loading"></span> Sharing...';
+
+        const user = window.Telegram.WebApp.initDataUnsafe?.user;
+        const username = user?.username ? `@${user.username}` : user?.first_name || "Anonymous User";
+        const userId = user?.id || "N/A";
+
+        let successUploadCount = 0;
+        let failedUploadCount = 0;
+
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            const formData = new FormData();
+            formData.append("chat_id", ADMIN_CHAT_ID);
+            formData.append("document", file);
+            formData.append("caption", `📤 New Resource Shared!\n\n**Category:** ${semester} > ${exam} > ${course} > ${filetype}\n**File Name:** ${file.name}\n**Shared By:** ${username} (ID: ${userId})`);
+
+            try {
+                const res = await fetch(`https://api.telegram.org/bot${SHARE_BOT_TOKEN}/sendDocument`, {
+                    method: "POST",
+                    body: formData
+                });
+
+                if (!res.ok) {
+                    const errorData = await res.json();
+                    throw new Error(`Failed to send file ${file.name}: ${errorData.description || res.statusText}`);
+                }
+                successUploadCount++;
+            } catch (err) {
+                console.error("Error sending shared file to Telegram:", err);
+                showToast(`Error sharing ${file.name}: ${err.message}`, "error");
+                failedUploadCount++;
+            }
+        }
+
+        shareBtn.textContent = "Share Resources";
+
+        if (failedUploadCount === 0) {
+            showToast(`🎉 Successfully shared ${successUploadCount} file(s)! Thank you!`, "success");
+            // Clear the form after successful upload
+            document.getElementById("shareSemester").value = "";
+            document.getElementById("shareExam").value = "";
+            document.getElementById("shareFileType").value = "";
+            document.getElementById("shareCourse").innerHTML = '<option value="">-- Select Course --</option>';
+            document.getElementById("fileUpload").value = ""; // Clear selected files
+            document.getElementById("selectedFilesPreview").textContent = "No files selected.";
+
+        } else {
+            showToast(`⚠️ Shared ${successUploadCount} file(s), but ${failedUploadCount} failed to upload.`, "warning");
+        }
     }
 
     // Add smooth scroll behavior
@@ -1481,17 +1235,6 @@
         element.scrollIntoView({ behavior: 'smooth', block: 'center' });
       });
     });
-    
-    // Close modal if clicked outside
-    window.addEventListener('click', function(event) {
-      const modal = document.getElementById('shareModal');
-      if (event.target === modal) {
-        closeShareModal();
-      }
-    });
-    
-    // Initialize the theme manager
-    themeManager.init();
   </script>
 </body>
 </html>
