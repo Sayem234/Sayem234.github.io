@@ -57,6 +57,11 @@
       padding: 20px;
       transition: var(--transition);
       line-height: 1.6;
+      overflow-x: hidden;
+    }
+    
+    body.modal-open {
+      overflow: hidden;
     }
 
     .header {
@@ -490,6 +495,8 @@
       z-index: 1000;
       align-items: center;
       justify-content: center;
+      overflow-y: auto;
+      padding: 20px;
     }
     
     .modal-content {
@@ -500,6 +507,8 @@
       width: 90%;
       max-width: 600px;
       position: relative;
+      max-height: 90vh;
+      overflow-y: auto;
     }
     
     .close-modal {
@@ -510,6 +519,7 @@
       cursor: pointer;
       color: var(--text-secondary);
       transition: var(--transition);
+      z-index: 10;
     }
     
     .close-modal:hover {
@@ -639,6 +649,13 @@
       padding: 2px 8px;
       border-radius: 12px;
       margin-left: 8px;
+    }
+    
+    .course-code {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      font-weight: 400;
+      margin-top: 3px;
     }
 
     @media (max-width: 768px) {
@@ -1002,6 +1019,23 @@
       'default': '📁'
     };
 
+    // Course mapping with codes
+    const COURSE_MAPPING = {
+      "Mathematics I": "MATH101",
+      "Physics I": "PHYS101",
+      "Chemistry": "CHEM101",
+      "Programming Fundamentals": "CSE101",
+      "Discrete Mathematics": "CSE102",
+      "Data Structures": "CSE201",
+      "Algorithms": "CSE202",
+      "Database Systems": "CSE301",
+      "Operating Systems": "CSE302",
+      "Computer Networks": "CSE401",
+      "Software Engineering": "CSE402",
+      "Artificial Intelligence": "CSE501",
+      "Machine Learning": "CSE502"
+    };
+
     // Original functionality preserved
     const GITHUB_USERNAME = "11UCRES";
     const REPO_NAME = "cse";
@@ -1062,7 +1096,8 @@
           if (item.type === "dir") {
             const opt = document.createElement("option");
             opt.value = item.name;
-            opt.textContent = `📖 ${item.name}`;
+            const courseCode = COURSE_MAPPING[item.name] || "COURSE";
+            opt.innerHTML = `📖 ${item.name} <span class="course-code">${courseCode}</span>`;
             courseSelect.appendChild(opt);
           }
         });
@@ -1097,7 +1132,8 @@
           if (item.type === "dir") {
             const opt = document.createElement("option");
             opt.value = item.name;
-            opt.textContent = `📖 ${item.name}`;
+            const courseCode = COURSE_MAPPING[item.name] || "COURSE";
+            opt.innerHTML = `📖 ${item.name} <span class="course-code">${courseCode}</span>`;
             courseSelect.appendChild(opt);
           }
         });
@@ -1333,6 +1369,7 @@
     // New functions for sharing resources
     function openShareModal() {
       document.getElementById('shareModal').style.display = 'flex';
+      document.body.classList.add('modal-open');
       
       // Pre-fill Telegram username with actual Telegram username if available
       const user = window.Telegram.WebApp.initDataUnsafe?.user;
@@ -1343,6 +1380,7 @@
     
     function closeShareModal() {
       document.getElementById('shareModal').style.display = 'none';
+      document.body.classList.remove('modal-open');
       // Reset form
       document.getElementById('shareForm').reset();
       document.getElementById('fileNameDisplay').textContent = 'No file selected';
@@ -1397,11 +1435,14 @@
       const actualUsername = user && user.username ? `@${user.username}` : null;
       const displayUsername = telegramUsername || actualUsername || 'Anonymous';
       
+      // Get course code
+      const courseCode = COURSE_MAPPING[course] || "COURSE";
+      
       // Create caption with resource details
       const caption = `📤 New Resource Submission\n\n` +
                      `👤 From: ${displayUsername}\n` +
                      `📅 Semester: ${semester}\n` +
-                     `📚 Course: ${course}\n` +
+                     `📚 Course: ${course} (${courseCode})\n` +
                      `📝 Exam Type: ${exam}\n` +
                      `📁 Resource Type: ${resourceType}\n` +
                      `📄 File: ${file.name}`;
