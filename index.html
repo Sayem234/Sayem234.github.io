@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CSE Resources Portal | University</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
             --primary: #3498db;
@@ -645,6 +646,65 @@
                 font-size: 16px;
             }
         }
+        
+        /* Telegram feedback styles */
+        .telegram-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        
+        .telegram-modal.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+        
+        .telegram-content {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 30px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            transform: translateY(20px);
+            transition: transform 0.3s ease;
+        }
+        
+        .telegram-modal.active .telegram-content {
+            transform: translateY(0);
+        }
+        
+        .telegram-icon {
+            font-size: 48px;
+            color: #0088cc;
+            margin-bottom: 20px;
+        }
+        
+        .telegram-content h2 {
+            margin-bottom: 15px;
+            color: var(--dark);
+        }
+        
+        .telegram-content p {
+            margin-bottom: 20px;
+            color: #555;
+        }
+        
+        .telegram-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
     </style>
 </head>
 <body>
@@ -848,6 +908,20 @@
             <p>Integrated with GitHub | Designed for Telegram Mini App</p>
         </footer>
     </div>
+    
+    <!-- Telegram Feedback Modal -->
+    <div class="telegram-modal" id="telegram-modal">
+        <div class="telegram-content">
+            <div class="telegram-icon">
+                <i class="fab fa-telegram"></i>
+            </div>
+            <h2 id="telegram-modal-title">Sending to Telegram</h2>
+            <p id="telegram-modal-message">Preparing your selected files...</p>
+            <div class="telegram-actions">
+                <button class="btn btn-primary" id="telegram-ok">OK</button>
+            </div>
+        </div>
+    </div>
 
     <script>
         // Initialize Telegram Web App
@@ -856,6 +930,12 @@
             tg = window.Telegram.WebApp;
             tg.expand();
             tg.MainButton.setText("OPEN PORTAL").show();
+            
+            // Set up theme parameters
+            const theme = tg.themeParams;
+            document.documentElement.style.setProperty('--primary', theme.link_color || '#3498db');
+            document.documentElement.style.setProperty('--secondary', theme.secondary_bg_color || '#2c3e50');
+            document.documentElement.style.setProperty('--dark', theme.bg_color || '#34495e');
         }
         
         // DOM Elements
@@ -878,6 +958,10 @@
         const progressBar = document.getElementById('progress-bar');
         const progress = document.getElementById('progress');
         const statusMessage = document.getElementById('status-message');
+        const telegramModal = document.getElementById('telegram-modal');
+        const telegramModalTitle = document.getElementById('telegram-modal-title');
+        const telegramModalMessage = document.getElementById('telegram-modal-message');
+        const telegramOkBtn = document.getElementById('telegram-ok');
         
         // GitHub Repository Configuration
         const GITHUB_REPO_OWNER = "11UCRES";
@@ -1196,11 +1280,38 @@
                 return;
             }
             
-            // In a real implementation, this would send files via Telegram
-            showAlert(`Sending ${selectedFiles.length} files to Telegram...`, 'success');
+            // Collect the download URLs
+            const fileUrls = [];
+            selectedFiles.forEach(checkbox => {
+                fileUrls.push(checkbox.dataset.url);
+            });
             
-            // For Telegram Mini App, we would use:
-            // if (tg) tg.sendData(JSON.stringify({files: fileList}));
+            // Prepare the data to send to the bot
+            const data = {
+                action: 'download_files',
+                files: fileUrls
+            };
+            
+            // Show the Telegram modal
+            showTelegramModal('Sending to Telegram', `Preparing ${selectedFiles.length} files...`);
+            
+            // If we are in the Telegram Mini App environment, send the data to the bot
+            if (tg) {
+                // Send the data as a string
+                tg.sendData(JSON.stringify(data));
+                
+                // Update the modal to show success
+                setTimeout(() => {
+                    telegramModalTitle.textContent = 'Files Sent!';
+                    telegramModalMessage.textContent = `Your ${selectedFiles.length} files have been sent to Telegram.`;
+                }, 1500);
+            } else {
+                // For testing outside Telegram
+                setTimeout(() => {
+                    telegramModalTitle.textContent = 'Telegram Integration';
+                    telegramModalMessage.textContent = `In a real Telegram Mini App, ${selectedFiles.length} files would be sent to your bot.`;
+                }, 1500);
+            }
         });
         
         // File upload handling
@@ -1366,6 +1477,25 @@
                 }, 400);
             }, 3000);
         }
+        
+        // Show Telegram modal
+        function showTelegramModal(title, message) {
+            telegramModalTitle.textContent = title;
+            telegramModalMessage.textContent = message;
+            telegramModal.classList.add('active');
+        }
+        
+        // Close Telegram modal
+        telegramOkBtn.addEventListener('click', () => {
+            telegramModal.classList.remove('active');
+        });
+        
+        // Close modal when clicking outside
+        telegramModal.addEventListener('click', (e) => {
+            if (e.target === telegramModal) {
+                telegramModal.classList.remove('active');
+            }
+        });
     </script>
 </body>
 </html>
