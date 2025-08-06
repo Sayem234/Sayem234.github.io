@@ -856,6 +856,7 @@
             tg = window.Telegram.WebApp;
             tg.expand();
             tg.MainButton.setText("OPEN PORTAL").show();
+            console.log('Telegram WebApp:', tg); // Debug: Verify initialization
         }
         
         // DOM Elements
@@ -883,6 +884,7 @@
         const GITHUB_REPO_OWNER = "11UCRES";
         const GITHUB_REPO_NAME = "cse";
         const GITHUB_API_BASE = "https://api.github.com";
+        const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB in bytes
         
         // Tab Switching
         tabBtns.forEach(btn => {
@@ -927,19 +929,20 @@
             targetSelect.innerHTML = '<option value="">Loading courses...</option>';
             
             try {
-                // Construct the GitHub API URL for the directory
                 const path = `${semester}/${examType}`;
                 const url = `${GITHUB_API_BASE}/repos/${GITHUB_REPO_OWNER}/${GITHUB_REPO_NAME}/contents/${path}`;
                 
                 const response = await fetch(url);
                 
                 if (!response.ok) {
+                    if (response.status === 403 || response.status === 429) {
+                        throw new Error('GitHub API rate limit exceeded');
+                    }
                     throw new Error(`GitHub API returned ${response.status}`);
                 }
                 
                 const data = await response.json();
                 
-                // Extract directories
                 const courses = [];
                 for (const item of data) {
                     if (item.type === 'dir') {
@@ -960,6 +963,7 @@
                 }
             } catch (error) {
                 targetSelect.innerHTML = '<option value="">Error loading courses</option>';
+                showAlert(error.message, 'error');
                 console.error('Error fetching courses:', error);
             } finally {
                 loadingElement.style.display = 'none';
@@ -1034,20 +1038,18 @@
             searchBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Searching...';
             
             try {
-                // Get files based on resource type
                 let results = [];
                 
                 if (resourceTypeVal === 'PreviousQuestions') {
-                    // Previous Questions files
                     results = await getFilesForPreviousQuestions(semester, examType);
                 } else {
-                    // Course-specific files
                     results = await getFilesForCourse(semester, examType, course, resourceTypeVal);
                 }
                 
                 displaySearchResults(results);
             } catch (error) {
                 fileList.innerHTML = '<li class="file-item">Error loading files</li>';
+                showAlert(error.message, 'error');
                 console.error('Error fetching files:', error);
             } finally {
                 searchBtn.disabled = false;
@@ -1064,23 +1066,26 @@
                 const response = await fetch(url);
                 
                 if (!response.ok) {
+                    if (response.status === 403 || response.status === 429) {
+                        throw new Error('GitHub API rate limit exceeded');
+                    }
                     throw new Error(`GitHub API returned ${response.status}`);
                 }
                 
                 const data = await response.json();
                 
-                return data.map(item => {
-                    return {
+                return data
+                    .filter(item => item.size <= MAX_FILE_SIZE) // Filter out files > 50 MB
+                    .map(item => ({
                         name: item.name,
                         type: item.name.split('.').pop().toLowerCase(),
                         size: formatFileSize(item.size),
                         date: new Date().toLocaleDateString(),
                         download_url: item.download_url
-                    };
-                });
+                    }));
             } catch (error) {
                 console.error('Error fetching course files:', error);
-                return [];
+                throw error;
             }
         }
         
@@ -1093,23 +1098,26 @@
                 const response = await fetch(url);
                 
                 if (!response.ok) {
+                    if (response.status === 403 || response.status === 429) {
+                        throw new Error('GitHub API rate limit exceeded');
+                    }
                     throw new Error(`GitHub API returned ${response.status}`);
                 }
                 
                 const data = await response.json();
                 
-                return data.map(item => {
-                    return {
+                return data
+                    .filter(item => item.size <= MAX_FILE_SIZE) // Filter out files > 50 MB
+                    .map(item => ({
                         name: item.name,
                         type: item.name.split('.').pop().toLowerCase(),
                         size: formatFileSize(item.size),
                         date: new Date().toLocaleDateString(),
                         download_url: item.download_url
-                    };
-                });
+                    }));
             } catch (error) {
                 console.error('Error fetching previous questions:', error);
-                return [];
+                throw error;
             }
         }
         
@@ -1198,6 +1206,7 @@
             
             // Collect the download URLs of selected files
             const fileUrls = Array.from(selectedFiles).map(checkbox => checkbox.dataset.url);
+            console.log('Sending files to Telegram:', fileUrls); // Debug: Log URLs
             
             // Send the file URLs to the Telegram bot
             if (tg) {
@@ -1212,6 +1221,7 @@
                     showAlert('Failed to send files to Telegram', 'error');
                 }
             } else {
+                console.error('Telegram Web App not initialized');
                 showAlert('Telegram Web App not initialized', 'error');
             }
         });
