@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CSE Resources Portal | University</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
             --primary: #3498db;
@@ -52,7 +53,6 @@
             position: relative;
         }
 
-        /* Header styles */
         header {
             background: linear-gradient(to right, var(--secondary), var(--dark));
             color: white;
@@ -137,7 +137,6 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.2);
         }
 
-        /* Tab content */
         .tab-content {
             padding: 25px;
             display: none;
@@ -178,7 +177,6 @@
             padding-bottom: 15px;
         }
 
-        /* Filters */
         .filters {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
@@ -224,7 +222,6 @@
             margin-left: 10px;
         }
 
-        /* Buttons */
         .btn {
             padding: 12px 24px;
             border: none;
@@ -267,7 +264,6 @@
             background: #27ae60;
         }
 
-        /* Search results */
         .search-results {
             position: relative;
         }
@@ -377,7 +373,6 @@
             transform: translateY(-2px);
         }
 
-        /* Upload area */
         .upload-area {
             border: 2px dashed #ddd;
             border-radius: var(--border-radius);
@@ -424,7 +419,6 @@
             display: none;
         }
 
-        /* File preview */
         .file-preview {
             margin: 20px 0;
         }
@@ -484,7 +478,6 @@
             color: white;
         }
 
-        /* Progress bar */
         .progress-bar {
             height: 8px;
             background: #e9ecef;
@@ -509,7 +502,6 @@
             display: none;
         }
 
-        /* Footer */
         footer {
             background: var(--dark);
             color: rgba(255,255,255,0.8);
@@ -523,7 +515,6 @@
             margin-bottom: 5px;
         }
 
-        /* Responsive design */
         @media (max-width: 900px) {
             .filters {
                 grid-template-columns: 1fr 1fr;
@@ -645,6 +636,106 @@
                 font-size: 16px;
             }
         }
+        
+        .telegram-share-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        
+        .telegram-share-modal.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+        
+        .share-content {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 30px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            transform: translateY(20px);
+            transition: transform 0.3s ease;
+        }
+        
+        .telegram-share-modal.active .share-content {
+            transform: translateY(0);
+        }
+        
+        .share-icon {
+            font-size: 48px;
+            color: #0088cc;
+            margin-bottom: 20px;
+        }
+        
+        .share-content h2 {
+            margin-bottom: 15px;
+            color: var(--dark);
+        }
+        
+        .share-content p {
+            margin-bottom: 20px;
+            color: #555;
+        }
+        
+        .share-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        
+        .share-preview {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            padding: 10px;
+            margin: 15px 0;
+            text-align: left;
+        }
+        
+        .share-preview-item {
+            display: flex;
+            align-items: center;
+            padding: 8px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .share-preview-item:last-child {
+            border-bottom: none;
+        }
+        
+        .share-file-icon {
+            width: 30px;
+            height: 30px;
+            background: rgba(52, 152, 219, 0.1);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+            font-size: 14px;
+            color: var(--primary);
+        }
+        
+        .share-file-name {
+            flex: 1;
+            font-size: 14px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
     </style>
 </head>
 <body>
@@ -749,7 +840,7 @@
                         <i class="fas fa-check-circle"></i> Select All Files
                     </button>
                     <a id="telegram-download" class="telegram-btn" href="#">
-                        <i class="fab fa-telegram"></i> Get on Telegram
+                        <i class="fab fa-telegram"></i> Share via Telegram
                     </a>
                 </div>
             </div>
@@ -848,6 +939,32 @@
             <p>Integrated with GitHub | Designed for Telegram Mini App</p>
         </footer>
     </div>
+    
+    <!-- Telegram Share Modal -->
+    <div class="telegram-share-modal" id="telegram-share-modal">
+        <div class="share-content">
+            <div class="share-icon">
+                <i class="fab fa-telegram"></i>
+            </div>
+            <h2 id="share-modal-title">Share via Telegram</h2>
+            <p id="share-modal-message">You're about to share these files:</p>
+            
+            <div class="share-preview" id="share-preview">
+                <!-- File preview will appear here -->
+            </div>
+            
+            <p class="small">Files will be shared directly in Telegram</p>
+            
+            <div class="share-actions">
+                <button class="btn btn-secondary" id="share-cancel">
+                    Cancel
+                </button>
+                <button class="btn btn-primary" id="share-confirm">
+                    <i class="fab fa-telegram"></i> Share Now
+                </button>
+            </div>
+        </div>
+    </div>
 
     <script>
         // Initialize Telegram Web App
@@ -856,7 +973,12 @@
             tg = window.Telegram.WebApp;
             tg.expand();
             tg.MainButton.setText("OPEN PORTAL").show();
-            console.log('Telegram WebApp:', tg); // Debug: Verify initialization
+            
+            // Set up theme parameters
+            const theme = tg.themeParams;
+            document.documentElement.style.setProperty('--primary', theme.link_color || '#3498db');
+            document.documentElement.style.setProperty('--secondary', theme.secondary_bg_color || '#2c3e50');
+            document.documentElement.style.setProperty('--dark', theme.bg_color || '#34495e');
         }
         
         // DOM Elements
@@ -879,12 +1001,17 @@
         const progressBar = document.getElementById('progress-bar');
         const progress = document.getElementById('progress');
         const statusMessage = document.getElementById('status-message');
+        const shareModal = document.getElementById('telegram-share-modal');
+        const shareModalTitle = document.getElementById('share-modal-title');
+        const shareModalMessage = document.getElementById('share-modal-message');
+        const sharePreview = document.getElementById('share-preview');
+        const shareCancelBtn = document.getElementById('share-cancel');
+        const shareConfirmBtn = document.getElementById('share-confirm');
         
         // GitHub Repository Configuration
         const GITHUB_REPO_OWNER = "11UCRES";
         const GITHUB_REPO_NAME = "cse";
         const GITHUB_API_BASE = "https://api.github.com";
-        const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB in bytes
         
         // Tab Switching
         tabBtns.forEach(btn => {
@@ -929,20 +1056,19 @@
             targetSelect.innerHTML = '<option value="">Loading courses...</option>';
             
             try {
+                // Construct the GitHub API URL for the directory
                 const path = `${semester}/${examType}`;
                 const url = `${GITHUB_API_BASE}/repos/${GITHUB_REPO_OWNER}/${GITHUB_REPO_NAME}/contents/${path}`;
                 
                 const response = await fetch(url);
                 
                 if (!response.ok) {
-                    if (response.status === 403 || response.status === 429) {
-                        throw new Error('GitHub API rate limit exceeded');
-                    }
                     throw new Error(`GitHub API returned ${response.status}`);
                 }
                 
                 const data = await response.json();
                 
+                // Extract directories
                 const courses = [];
                 for (const item of data) {
                     if (item.type === 'dir') {
@@ -963,7 +1089,6 @@
                 }
             } catch (error) {
                 targetSelect.innerHTML = '<option value="">Error loading courses</option>';
-                showAlert(error.message, 'error');
                 console.error('Error fetching courses:', error);
             } finally {
                 loadingElement.style.display = 'none';
@@ -1038,18 +1163,20 @@
             searchBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Searching...';
             
             try {
+                // Get files based on resource type
                 let results = [];
                 
                 if (resourceTypeVal === 'PreviousQuestions') {
+                    // Previous Questions files
                     results = await getFilesForPreviousQuestions(semester, examType);
                 } else {
+                    // Course-specific files
                     results = await getFilesForCourse(semester, examType, course, resourceTypeVal);
                 }
                 
                 displaySearchResults(results);
             } catch (error) {
                 fileList.innerHTML = '<li class="file-item">Error loading files</li>';
-                showAlert(error.message, 'error');
                 console.error('Error fetching files:', error);
             } finally {
                 searchBtn.disabled = false;
@@ -1066,26 +1193,23 @@
                 const response = await fetch(url);
                 
                 if (!response.ok) {
-                    if (response.status === 403 || response.status === 429) {
-                        throw new Error('GitHub API rate limit exceeded');
-                    }
                     throw new Error(`GitHub API returned ${response.status}`);
                 }
                 
                 const data = await response.json();
                 
-                return data
-                    .filter(item => item.size <= MAX_FILE_SIZE) // Filter out files > 50 MB
-                    .map(item => ({
+                return data.map(item => {
+                    return {
                         name: item.name,
                         type: item.name.split('.').pop().toLowerCase(),
                         size: formatFileSize(item.size),
                         date: new Date().toLocaleDateString(),
                         download_url: item.download_url
-                    }));
+                    };
+                });
             } catch (error) {
                 console.error('Error fetching course files:', error);
-                throw error;
+                return [];
             }
         }
         
@@ -1098,26 +1222,23 @@
                 const response = await fetch(url);
                 
                 if (!response.ok) {
-                    if (response.status === 403 || response.status === 429) {
-                        throw new Error('GitHub API rate limit exceeded');
-                    }
                     throw new Error(`GitHub API returned ${response.status}`);
                 }
                 
                 const data = await response.json();
                 
-                return data
-                    .filter(item => item.size <= MAX_FILE_SIZE) // Filter out files > 50 MB
-                    .map(item => ({
+                return data.map(item => {
+                    return {
                         name: item.name,
                         type: item.name.split('.').pop().toLowerCase(),
                         size: formatFileSize(item.size),
                         date: new Date().toLocaleDateString(),
                         download_url: item.download_url
-                    }));
+                    };
+                });
             } catch (error) {
                 console.error('Error fetching previous questions:', error);
-                throw error;
+                return [];
             }
         }
         
@@ -1194,7 +1315,7 @@
                 '<i class="fas fa-times-circle"></i> Deselect All Files';
         });
         
-        // Get files on Telegram
+        // Share via Telegram
         telegramDownload.addEventListener('click', (e) => {
             e.preventDefault();
             const selectedFiles = document.querySelectorAll('.file-checkbox:checked');
@@ -1204,26 +1325,83 @@
                 return;
             }
             
-            // Collect the download URLs of selected files
-            const fileUrls = Array.from(selectedFiles).map(checkbox => checkbox.dataset.url);
-            console.log('Sending files to Telegram:', fileUrls); // Debug: Log URLs
+            // Collect the download URLs
+            const fileUrls = [];
+            const fileNames = [];
+            selectedFiles.forEach(checkbox => {
+                fileUrls.push(checkbox.dataset.url);
+                fileNames.push(checkbox.closest('.file-item').querySelector('.file-name').textContent);
+            });
             
-            // Send the file URLs to the Telegram bot
-            if (tg) {
-                try {
-                    tg.sendData(JSON.stringify({
-                        action: 'send_files',
-                        files: fileUrls
-                    }));
-                    showAlert(`Sending ${selectedFiles.length} files to Telegram...`, 'success');
-                } catch (error) {
-                    console.error('Error sending data to Telegram:', error);
-                    showAlert('Failed to send files to Telegram', 'error');
-                }
-            } else {
-                console.error('Telegram Web App not initialized');
-                showAlert('Telegram Web App not initialized', 'error');
+            // Prepare the share preview
+            sharePreview.innerHTML = '';
+            fileNames.forEach((name, index) => {
+                const type = name.split('.').pop().toLowerCase();
+                const previewItem = document.createElement('div');
+                previewItem.className = 'share-preview-item';
+                previewItem.innerHTML = `
+                    <div class="share-file-icon">${getFileIcon(type)}</div>
+                    <div class="share-file-name">${name}</div>
+                `;
+                sharePreview.appendChild(previewItem);
+            });
+            
+            // Update modal text
+            shareModalTitle.textContent = `Share ${selectedFiles.length} Files`;
+            shareModalMessage.textContent = `You're about to share ${selectedFiles.length} resources:`;
+            
+            // Show the share modal
+            shareModal.classList.add('active');
+            
+            // Store the file URLs for sharing
+            shareConfirmBtn.dataset.files = JSON.stringify(fileUrls);
+        });
+        
+        // Confirm sharing
+        shareConfirmBtn.addEventListener('click', () => {
+            const fileUrls = JSON.parse(shareConfirmBtn.dataset.files || '[]');
+            
+            if (fileUrls.length === 0) {
+                showAlert('No files selected for sharing');
+                shareModal.classList.remove('active');
+                return;
             }
+            
+            // Share via Telegram
+            if (tg) {
+                // Create a message with file links
+                let message = "Here are the resources I found:\n\n";
+                fileUrls.forEach(url => {
+                    message += `🔗 ${url}\n`;
+                });
+                
+                // Send the message to the bot
+                tg.sendData(JSON.stringify({
+                    action: "share_resources",
+                    files: fileUrls
+                }));
+                
+                // Close the Mini App
+                setTimeout(() => {
+                    tg.close();
+                }, 1000);
+            } else {
+                // For browsers - create a shareable link
+                const text = "Check out these resources:";
+                const urls = fileUrls.join("%0A");
+                const telegramUrl = `https://t.me/share/url?url=${encodeURIComponent(urls)}&text=${encodeURIComponent(text)}`;
+                
+                // Open in a new tab
+                window.open(telegramUrl, '_blank');
+            }
+            
+            // Close the modal
+            shareModal.classList.remove('active');
+        });
+        
+        // Cancel sharing
+        shareCancelBtn.addEventListener('click', () => {
+            shareModal.classList.remove('active');
         });
         
         // File upload handling
