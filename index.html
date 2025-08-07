@@ -505,236 +505,23 @@
         footer {
             background: var(--dark);
             color: rgba(255,255,255,0.8);
-            padding: 20px;
             text-align: center;
+            padding: 15px;
             font-size: 14px;
-            line-height: 1.6;
         }
-
-        footer p {
-            margin-bottom: 5px;
-        }
-
-        @media (max-width: 900px) {
-            .filters {
-                grid-template-columns: 1fr 1fr;
-            }
-            
-            .logo {
-                flex-direction: column;
-                text-align: center;
-            }
-            
-            .tabs {
-                justify-content: center;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .card-title {
-                font-size: 20px;
-            }
-            
-            .logo h1 {
-                font-size: 24px;
-            }
-            
-            .tab-btn {
-                padding: 10px 15px;
-                font-size: 14px;
-            }
-            
-            .btn, .telegram-btn {
-                padding: 10px 20px;
-                font-size: 14px;
-            }
-        }
-
-        @media (max-width: 600px) {
-            .filters {
-                grid-template-columns: 1fr;
-            }
-            
-            .file-item {
-                flex-wrap: wrap;
-            }
-            
-            .file-actions {
-                margin-left: 0;
-                margin-top: 15px;
-                width: 100%;
-                justify-content: flex-end;
-            }
-            
-            .btn-group {
-                flex-direction: column;
-            }
-            
-            .btn, .telegram-btn {
-                width: 100%;
-                justify-content: center;
-            }
-        }
-
-        @media (max-width: 480px) {
-            body {
-                padding: 10px;
-            }
-            
-            .container {
-                border-radius: 0;
-            }
-            
-            header {
-                padding: 15px;
-            }
-            
-            .tab-content {
-                padding: 15px;
-            }
-            
-            .card {
-                padding: 20px;
-            }
-            
-            .tabs {
-                flex-direction: column;
-            }
-            
-            .tab-btn {
-                width: 100%;
-                justify-content: center;
-            }
-            
-            .logo-icon {
-                width: 50px;
-                height: 50px;
-                font-size: 24px;
-            }
-            
-            .logo h1 {
-                font-size: 20px;
-            }
-            
-            .subtitle {
-                font-size: 14px;
-            }
-            
-            .card-title {
-                font-size: 18px;
-                margin-bottom: 20px;
-            }
-            
-            select {
-                padding: 10px 12px;
-                font-size: 15px;
-            }
-            
-            .file-icon {
-                width: 36px;
-                height: 36px;
-                font-size: 16px;
-            }
-        }
-        
-        .telegram-share-modal {
+        .alert-box {
             position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.7);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 10000;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s ease;
-        }
-        
-        .telegram-share-modal.active {
-            opacity: 1;
-            pointer-events: all;
-        }
-        
-        .share-content {
-            background: white;
+            bottom: 20px;
+            right: 20px;
+            padding: 15px 25px;
             border-radius: var(--border-radius);
-            padding: 30px;
-            max-width: 400px;
-            width: 90%;
-            text-align: center;
-            transform: translateY(20px);
-            transition: transform 0.3s ease;
-        }
-        
-        .telegram-share-modal.active .share-content {
-            transform: translateY(0);
-        }
-        
-        .share-icon {
-            font-size: 48px;
-            color: #0088cc;
-            margin-bottom: 20px;
-        }
-        
-        .share-content h2 {
-            margin-bottom: 15px;
-            color: var(--dark);
-        }
-        
-        .share-content p {
-            margin-bottom: 20px;
-            color: #555;
-        }
-        
-        .share-actions {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-        }
-        
-        .share-preview {
-            max-height: 200px;
-            overflow-y: auto;
-            border: 1px solid #eee;
-            border-radius: 8px;
-            padding: 10px;
-            margin: 15px 0;
-            text-align: left;
-        }
-        
-        .share-preview-item {
-            display: flex;
-            align-items: center;
-            padding: 8px;
-            border-bottom: 1px solid #f0f0f0;
-        }
-        
-        .share-preview-item:last-child {
-            border-bottom: none;
-        }
-        
-        .share-file-icon {
-            width: 30px;
-            height: 30px;
-            background: rgba(52, 152, 219, 0.1);
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-right: 10px;
-            font-size: 14px;
-            color: var(--primary);
-        }
-        
-        .share-file-name {
-            flex: 1;
-            font-size: 14px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
+            color: white;
+            font-weight: 600;
+            z-index: 1000;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.4s ease;
         }
     </style>
 </head>
@@ -742,806 +529,90 @@
     <div class="container">
         <header>
             <div class="logo">
-                <div class="logo-icon">
-                    <i class="fas fa-graduation-cap"></i>
-                </div>
+                <div class="logo-icon"><i class="fas fa-graduation-cap"></i></div>
                 <div>
-                    <h1>CSE Department Resources</h1>
-                    <p class="subtitle">Access course materials, notes, and previous exam questions</p>
+                    <h1>CSE Resources Portal</h1>
+                    <p class="subtitle">Access a wide range of academic materials.</p>
                 </div>
             </div>
-            
             <div class="tabs">
-                <button class="tab-btn active" data-tab="search">
-                    <i class="fas fa-search"></i> Search Resources
-                </button>
-                <button class="tab-btn" data-tab="upload">
-                    <i class="fas fa-share-alt"></i> Share Resources
-                </button>
+                <button class="tab-btn active" data-tab="search"><i class="fas fa-search"></i> Find Resources</button>
+                <button class="tab-btn" data-tab="upload"><i class="fas fa-upload"></i> Upload Resources</button>
             </div>
         </header>
-        
-        <!-- Search Resources Tab -->
-        <div id="search" class="tab-content active">
-            <div class="card">
-                <h2 class="card-title">
-                    <i class="fas fa-filter"></i> Find Resources
-                </h2>
-                
-                <div class="filters">
-                    <div class="filter-group">
-                        <label for="semester">
-                            <i class="fas fa-layer-group"></i> Semester
-                        </label>
-                        <select id="semester">
-                            <option value="">Select Semester</option>
-                            <option value="Semester1">Semester 1</option>
-                            <option value="Semester2">Semester 2</option>
-                            <option value="Semester3">Semester 3</option>
-                            <option value="Semester4">Semester 4</option>
-                            <option value="Semester5">Semester 5</option>
-                            <option value="Semester6">Semester 6</option>
-                            <option value="Semester7">Semester 7</option>
-                            <option value="Semester8">Semester 8</option>
-                        </select>
+
+        <main>
+            <div id="search" class="tab-content active">
+                <div class="card">
+                    <h2 class="card-title"><i class="fas fa-filter"></i> Filters</h2>
+                    <div class="filters">
+                        <div class="filter-group">
+                            <label for="course-filter"><i class="fas fa-book"></i> Course</label>
+                            <select id="course-filter">
+                                <option value="">All Courses</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label for="semester-filter"><i class="fas fa-calendar-alt"></i> Semester</label>
+                            <select id="semester-filter">
+                                <option value="">All Semesters</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label for="type-filter"><i class="fas fa-file-alt"></i> Type</label>
+                            <select id="type-filter">
+                                <option value="">All Types</option>
+                            </select>
+                        </div>
                     </div>
-                    
-                    <div class="filter-group">
-                        <label for="exam-type">
-                            <i class="fas fa-file-alt"></i> Exam Type
-                        </label>
-                        <select id="exam-type">
-                            <option value="">Select Exam Type</option>
-                            <option value="Mid">Mid Term Exam</option>
-                            <option value="Final">Final Exam</option>
-                        </select>
-                    </div>
-                    
-                    <div class="filter-group">
-                        <label for="resource-type">
-                            <i class="fas fa-book"></i> Resource Type
-                        </label>
-                        <select id="resource-type">
-                            <option value="">Select Resource Type</option>
-                            <option value="material">Course Material</option>
-                            <option value="notes">Notes</option>
-                            <option value="PreviousQuestions">Previous Questions</option>
-                        </select>
-                    </div>
-                    
-                    <div class="filter-group">
-                        <label for="course">
-                            <i class="fas fa-book-open"></i> Course
-                        </label>
-                        <select id="course">
-                            <option value="">Select semester and exam type first</option>
-                        </select>
-                        <i class="fas fa-spinner fa-spin loading-icon" id="course-loading" style="display: none;"></i>
+                    <div class="btn-group">
+                        <button class="btn btn-primary" id="search-btn"><i class="fas fa-search"></i> Search</button>
+                        <button class="btn btn-secondary" id="reset-btn"><i class="fas fa-redo"></i> Reset</button>
                     </div>
                 </div>
-                
-                <button id="search-btn" class="btn btn-primary">
-                    <i class="fas fa-search"></i> Search Resources
-                </button>
-            </div>
-            
-            <div id="search-results" class="card search-results">
-                <h2 class="card-title">
-                    <i class="fas fa-file-download"></i> Search Results
-                </h2>
-                <p class="results-message">Select your criteria and click "Search Resources" to find files.</p>
-                
-                <ul class="file-list">
-                    <!-- Results will be populated here -->
-                </ul>
-                
-                <div class="btn-group">
-                    <button id="select-all" class="btn btn-secondary">
-                        <i class="fas fa-check-circle"></i> Select All Files
-                    </button>
-                    <a id="telegram-download" class="telegram-btn" href="#">
-                        <i class="fab fa-telegram"></i> Share via Telegram
-                    </a>
+
+                <div class="card search-results">
+                    <h2 class="card-title"><i class="fas fa-list-ul"></i> Results</h2>
+                    <p class="results-message" id="results-message">No files found. Try a new search!</p>
+                    <ul class="file-list" id="file-list">
+                        <!-- File items will be dynamically inserted here -->
+                    </ul>
+                    <div class="btn-group">
+                        <button class="btn telegram-btn" id="send-btn" disabled><i class="fab fa-telegram-plane"></i> Send to Telegram</button>
+                        <button class="btn btn-secondary" id="select-all-btn"><i class="fas fa-check-double"></i> Select All</button>
+                    </div>
                 </div>
             </div>
-        </div>
-        
-        <!-- Upload Resources Tab -->
-        <div id="upload" class="tab-content">
-            <div class="card">
-                <h2 class="card-title">
-                    <i class="fas fa-cloud-upload-alt"></i> Share Resources
-                </h2>
-                
-                <div class="filters">
-                    <div class="filter-group">
-                        <label for="upload-semester">
-                            <i class="fas fa-layer-group"></i> Semester
-                        </label>
-                        <select id="upload-semester">
-                            <option value="">Select Semester</option>
-                            <option value="Semester1">Semester 1</option>
-                            <option value="Semester2">Semester 2</option>
-                            <option value="Semester3">Semester 3</option>
-                            <option value="Semester4">Semester 4</option>
-                            <option value="Semester5">Semester 5</option>
-                            <option value="Semester6">Semester 6</option>
-                            <option value="Semester7">Semester 7</option>
-                            <option value="Semester8">Semester 8</option>
-                        </select>
+
+            <div id="upload" class="tab-content">
+                <div class="card">
+                    <h2 class="card-title"><i class="fas fa-upload"></i> Upload Files</h2>
+                    <div class="upload-area" id="upload-area">
+                        <div class="upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
+                        <h3>Drag & Drop files here or</h3>
+                        <button class="btn btn-primary" id="file-select-btn">Choose Files</button>
+                        <p class="small">Max file size: 20MB</p>
                     </div>
-                    
-                    <div class="filter-group">
-                        <label for="upload-exam-type">
-                            <i class="fas fa-file-alt"></i> Exam Type
-                        </label>
-                        <select id="upload-exam-type">
-                            <option value="">Select Exam Type</option>
-                            <option value="Mid">Mid Term Exam</option>
-                            <option value="Final">Final Exam</option>
-                        </select>
+                    <input type="file" id="file-input" multiple class="file-input">
+                    <div class="file-preview" id="file-preview">
+                        <!-- File previews will be dynamically inserted here -->
                     </div>
-                    
-                    <div class="filter-group">
-                        <label for="upload-resource-type">
-                            <i class="fas fa-book"></i> Resource Type
-                        </label>
-                        <select id="upload-resource-type">
-                            <option value="">Select Resource Type</option>
-                            <option value="material">Course Material</option>
-                            <option value="notes">Notes</option>
-                            <option value="PreviousQuestions">Previous Questions</option>
-                        </select>
-                    </div>
-                    
-                    <div class="filter-group">
-                        <label for="upload-course">
-                            <i class="fas fa-book-open"></i> Course
-                        </label>
-                        <select id="upload-course">
-                            <option value="">Select semester and exam type first</option>
-                        </select>
-                        <i class="fas fa-spinner fa-spin loading-icon" id="upload-course-loading" style="display: none;"></i>
+                    <div class="btn-group">
+                        <button class="btn btn-success" id="upload-btn" disabled><i class="fas fa-cloud-upload-alt"></i> Upload Files</button>
+                        <button class="btn btn-secondary" id="cancel-upload-btn" disabled><i class="fas fa-times-circle"></i> Cancel</button>
                     </div>
                 </div>
-                
-                <div class="upload-area" id="upload-area">
-                    <div class="upload-icon">
-                        <i class="fas fa-cloud-upload-alt"></i>
-                    </div>
-                    <h3>Drag & Drop files here</h3>
-                    <p>or</p>
-                    <button class="btn btn-primary" id="browse-btn">
-                        <i class="fas fa-folder-open"></i> Browse Files
-                    </button>
-                    <input type="file" id="file-input" class="file-input" multiple>
-                    <p class="small">Supported files: PDF, DOC, DOCX, PPT, PPTX, TXT, JPG, PNG (Max 25MB each)</p>
-                </div>
-                
-                <div class="file-preview" id="file-preview">
-                    <!-- Preview of selected files will appear here -->
-                </div>
-                
-                <div class="progress-bar" id="progress-bar">
-                    <div class="progress" id="progress"></div>
-                </div>
-                
-                <div class="status-message" id="status-message"></div>
-                
-                <button id="upload-btn" class="btn btn-success">
-                    <i class="fas fa-paper-plane"></i> Upload to GitHub
-                </button>
             </div>
-        </div>
-        
+        </main>
+
         <footer>
-            <p>CSE Resources Portal &copy; 2023 | Computer Science & Engineering Department</p>
-            <p>Integrated with GitHub | Designed for Telegram Mini App</p>
+            <p>&copy; 2023 CSE Resources. All rights reserved.</p>
         </footer>
     </div>
     
-    <!-- Telegram Share Modal -->
-    <div class="telegram-share-modal" id="telegram-share-modal">
-        <div class="share-content">
-            <div class="share-icon">
-                <i class="fab fa-telegram"></i>
-            </div>
-            <h2 id="share-modal-title">Share via Telegram</h2>
-            <p id="share-modal-message">You're about to share these files:</p>
-            
-            <div class="share-preview" id="share-preview">
-                <!-- File preview will appear here -->
-            </div>
-            
-            <p class="small">Files will be shared directly in Telegram</p>
-            
-            <div class="share-actions">
-                <button class="btn btn-secondary" id="share-cancel">
-                    Cancel
-                </button>
-                <button class="btn btn-primary" id="share-confirm">
-                    <i class="fab fa-telegram"></i> Share Now
-                </button>
-            </div>
-        </div>
-    </div>
-
     <script>
-        // Initialize Telegram Web App
-        let tg = null;
-        if (window.Telegram && window.Telegram.WebApp) {
-            tg = window.Telegram.WebApp;
-            tg.expand();
-            tg.MainButton.setText("OPEN PORTAL").show();
-            
-            // Set up theme parameters
-            const theme = tg.themeParams;
-            document.documentElement.style.setProperty('--primary', theme.link_color || '#3498db');
-            document.documentElement.style.setProperty('--secondary', theme.secondary_bg_color || '#2c3e50');
-            document.documentElement.style.setProperty('--dark', theme.bg_color || '#34495e');
-        }
-        
-        // DOM Elements
-        const tabBtns = document.querySelectorAll('.tab-btn');
-        const tabContents = document.querySelectorAll('.tab-content');
-        const resourceType = document.getElementById('resource-type');
-        const courseSelect = document.getElementById('course');
-        const courseLoading = document.getElementById('course-loading');
-        const uploadResourceType = document.getElementById('upload-resource-type');
-        const uploadCourseSelect = document.getElementById('upload-course');
-        const uploadCourseLoading = document.getElementById('upload-course-loading');
-        const searchBtn = document.getElementById('search-btn');
-        const selectAllBtn = document.getElementById('select-all');
-        const telegramDownload = document.getElementById('telegram-download');
-        const uploadArea = document.getElementById('upload-area');
-        const fileInput = document.getElementById('file-input');
-        const browseBtn = document.getElementById('browse-btn');
-        const filePreview = document.getElementById('file-preview');
-        const uploadBtn = document.getElementById('upload-btn');
-        const progressBar = document.getElementById('progress-bar');
-        const progress = document.getElementById('progress');
-        const statusMessage = document.getElementById('status-message');
-        const shareModal = document.getElementById('telegram-share-modal');
-        const shareModalTitle = document.getElementById('share-modal-title');
-        const shareModalMessage = document.getElementById('share-modal-message');
-        const sharePreview = document.getElementById('share-preview');
-        const shareCancelBtn = document.getElementById('share-cancel');
-        const shareConfirmBtn = document.getElementById('share-confirm');
-        
-        // GitHub Repository Configuration
-        const GITHUB_REPO_OWNER = "11UCRES";
-        const GITHUB_REPO_NAME = "cse";
-        const GITHUB_API_BASE = "https://api.github.com";
-        
-        // Tab Switching
-        tabBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                tabBtns.forEach(b => b.classList.remove('active'));
-                tabContents.forEach(tab => tab.classList.remove('active'));
-                btn.classList.add('active');
-                document.getElementById(btn.dataset.tab).classList.add('active');
-            });
-        });
-        
-        // Automatically set course for previous questions
-        function handleResourceTypeChange() {
-            if (this.value === 'PreviousQuestions') {
-                courseSelect.disabled = true;
-                courseSelect.value = '';
-            } else {
-                courseSelect.disabled = false;
-            }
-        }
-        
-        resourceType.addEventListener('change', handleResourceTypeChange);
-        uploadResourceType.addEventListener('change', function() {
-            if (this.value === 'PreviousQuestions') {
-                uploadCourseSelect.disabled = true;
-                uploadCourseSelect.value = '';
-            } else {
-                uploadCourseSelect.disabled = false;
-            }
-        });
-        
-        // Fetch courses from GitHub based on semester and exam type
-        async function fetchCourses(semester, examType, resourceType, targetSelect, loadingElement) {
-            if (!semester || !examType || !resourceType) return;
-            
-            if (resourceType === 'PreviousQuestions') {
-                targetSelect.innerHTML = '<option value="">Not needed for previous questions</option>';
-                return;
-            }
-            
-            loadingElement.style.display = 'block';
-            targetSelect.innerHTML = '<option value="">Loading courses...</option>';
-            
-            try {
-                // Construct the GitHub API URL for the directory
-                const path = `${semester}/${examType}`;
-                const url = `${GITHUB_API_BASE}/repos/${GITHUB_REPO_OWNER}/${GITHUB_REPO_NAME}/contents/${path}`;
-                
-                const response = await fetch(url);
-                
-                if (!response.ok) {
-                    throw new Error(`GitHub API returned ${response.status}`);
-                }
-                
-                const data = await response.json();
-                
-                // Extract directories
-                const courses = [];
-                for (const item of data) {
-                    if (item.type === 'dir') {
-                        courses.push(item.name);
-                    }
-                }
-                
-                if (courses.length === 0) {
-                    targetSelect.innerHTML = '<option value="">No courses found</option>';
-                } else {
-                    targetSelect.innerHTML = '<option value="">Select Course</option>';
-                    courses.forEach(course => {
-                        const option = document.createElement('option');
-                        option.value = course;
-                        option.textContent = course;
-                        targetSelect.appendChild(option);
-                    });
-                }
-            } catch (error) {
-                targetSelect.innerHTML = '<option value="">Error loading courses</option>';
-                console.error('Error fetching courses:', error);
-            } finally {
-                loadingElement.style.display = 'none';
-            }
-        }
-        
-        // Add event listeners to fetch courses when filters change
-        document.getElementById('semester').addEventListener('change', function() {
-            const semester = this.value;
-            const examType = document.getElementById('exam-type').value;
-            const resourceTypeVal = resourceType.value;
-            fetchCourses(semester, examType, resourceTypeVal, courseSelect, courseLoading);
-        });
-        
-        document.getElementById('exam-type').addEventListener('change', function() {
-            const examType = this.value;
-            const semester = document.getElementById('semester').value;
-            const resourceTypeVal = resourceType.value;
-            fetchCourses(semester, examType, resourceTypeVal, courseSelect, courseLoading);
-        });
-        
-        resourceType.addEventListener('change', function() {
-            const resourceTypeVal = this.value;
-            const semester = document.getElementById('semester').value;
-            const examType = document.getElementById('exam-type').value;
-            fetchCourses(semester, examType, resourceTypeVal, courseSelect, courseLoading);
-        });
-        
-        // Same for upload section
-        document.getElementById('upload-semester').addEventListener('change', function() {
-            const semester = this.value;
-            const examType = document.getElementById('upload-exam-type').value;
-            const resourceTypeVal = uploadResourceType.value;
-            fetchCourses(semester, examType, resourceTypeVal, uploadCourseSelect, uploadCourseLoading);
-        });
-        
-        document.getElementById('upload-exam-type').addEventListener('change', function() {
-            const examType = this.value;
-            const semester = document.getElementById('upload-semester').value;
-            const resourceTypeVal = uploadResourceType.value;
-            fetchCourses(semester, examType, resourceTypeVal, uploadCourseSelect, uploadCourseLoading);
-        });
-        
-        uploadResourceType.addEventListener('change', function() {
-            const resourceTypeVal = this.value;
-            const semester = document.getElementById('upload-semester').value;
-            const examType = document.getElementById('upload-exam-type').value;
-            fetchCourses(semester, examType, resourceTypeVal, uploadCourseSelect, uploadCourseLoading);
-        });
-        
-        // Search functionality
-        searchBtn.addEventListener('click', async () => {
-            const semester = document.getElementById('semester').value;
-            const examType = document.getElementById('exam-type').value;
-            const resourceTypeVal = resourceType.value;
-            const course = courseSelect.value;
-            
-            if (!semester || !examType || !resourceTypeVal) {
-                showAlert('Please select semester, exam type, and resource type');
-                return;
-            }
-            
-            if (resourceTypeVal !== 'PreviousQuestions' && !course) {
-                showAlert('Please select a course');
-                return;
-            }
-            
-            // Show loading
-            const fileList = document.querySelector('.file-list');
-            fileList.innerHTML = '<li class="file-item">Searching resources...</li>';
-            searchBtn.disabled = true;
-            searchBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Searching...';
-            
-            try {
-                // Get files based on resource type
-                let results = [];
-                
-                if (resourceTypeVal === 'PreviousQuestions') {
-                    // Previous Questions files
-                    results = await getFilesForPreviousQuestions(semester, examType);
-                } else {
-                    // Course-specific files
-                    results = await getFilesForCourse(semester, examType, course, resourceTypeVal);
-                }
-                
-                displaySearchResults(results);
-            } catch (error) {
-                fileList.innerHTML = '<li class="file-item">Error loading files</li>';
-                console.error('Error fetching files:', error);
-            } finally {
-                searchBtn.disabled = false;
-                searchBtn.innerHTML = '<i class="fas fa-search"></i> Search Resources';
-            }
-        });
-        
-        // Get files for a specific course
-        async function getFilesForCourse(semester, examType, course, resourceType) {
-            try {
-                const path = `${semester}/${examType}/${course}/${resourceType}`;
-                const url = `${GITHUB_API_BASE}/repos/${GITHUB_REPO_OWNER}/${GITHUB_REPO_NAME}/contents/${path}`;
-                
-                const response = await fetch(url);
-                
-                if (!response.ok) {
-                    throw new Error(`GitHub API returned ${response.status}`);
-                }
-                
-                const data = await response.json();
-                
-                return data.map(item => {
-                    return {
-                        name: item.name,
-                        type: item.name.split('.').pop().toLowerCase(),
-                        size: item.size,
-                        sizeFormatted: formatFileSize(item.size),
-                        date: new Date().toLocaleDateString(),
-                        download_url: item.download_url
-                    };
-                });
-            } catch (error) {
-                console.error('Error fetching course files:', error);
-                return [];
-            }
-        }
-        
-        // Get files for previous questions
-        async function getFilesForPreviousQuestions(semester, examType) {
-            try {
-                const path = `${semester}/PreviousQuestions/${examType}`;
-                const url = `${GITHUB_API_BASE}/repos/${GITHUB_REPO_OWNER}/${GITHUB_REPO_NAME}/contents/${path}`;
-                
-                const response = await fetch(url);
-                
-                if (!response.ok) {
-                    throw new Error(`GitHub API returned ${response.status}`);
-                }
-                
-                const data = await response.json();
-                
-                return data.map(item => {
-                    return {
-                        name: item.name,
-                        type: item.name.split('.').pop().toLowerCase(),
-                        size: item.size,
-                        sizeFormatted: formatFileSize(item.size),
-                        date: new Date().toLocaleDateString(),
-                        download_url: item.download_url
-                    };
-                });
-            } catch (error) {
-                console.error('Error fetching previous questions:', error);
-                return [];
-            }
-        }
-        
-        // Display search results
-        function displaySearchResults(results) {
-            const fileList = document.querySelector('.file-list');
-            fileList.innerHTML = '';
-            
-            if (results.length === 0) {
-                fileList.innerHTML = '<li class="file-item">No files found for your selection.</li>';
-                document.querySelector('.results-message').textContent = 'No resources found';
-                return;
-            }
-            
-            results.forEach(file => {
-                const li = document.createElement('li');
-                li.className = 'file-item';
-                li.innerHTML = `
-                    <div class="file-icon">${getFileIcon(file.type)}</div>
-                    <div>
-                        <div class="file-name">${file.name}</div>
-                        <div class="file-details">${file.sizeFormatted} • ${file.date}</div>
-                    </div>
-                    <div class="file-actions">
-                        <input type="checkbox" class="file-checkbox" data-url="${file.download_url}" data-name="${file.name}" data-size="${file.size}">
-                        <button class="action-btn" title="Preview">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                    </div>
-                `;
-                fileList.appendChild(li);
-            });
-            
-            document.querySelector('.results-message').textContent = `Found ${results.length} resources`;
-        }
-        
-        // Get file icon based on type
-        function getFileIcon(type) {
-            const icons = {
-                pdf: '<i class="fas fa-file-pdf"></i>',
-                doc: '<i class="fas fa-file-word"></i>',
-                docx: '<i class="fas fa-file-word"></i>',
-                ppt: '<i class="fas fa-file-powerpoint"></i>',
-                pptx: '<i class="fas fa-file-powerpoint"></i>',
-                txt: '<i class="fas fa-file-alt"></i>',
-                jpg: '<i class="fas fa-file-image"></i>',
-                png: '<i class="fas fa-file-image"></i>',
-                default: '<i class="fas fa-file"></i>'
-            };
-            
-            return icons[type] || icons.default;
-        }
-        
-        // Format file size
-        function formatFileSize(bytes) {
-            if (bytes === 0) return '0 Bytes';
-            const k = 1024;
-            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-            const i = Math.floor(Math.log(bytes) / Math.log(k));
-            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-        }
-        
-        // Select all files
-        selectAllBtn.addEventListener('click', () => {
-            const checkboxes = document.querySelectorAll('.file-checkbox');
-            const allSelected = Array.from(checkboxes).every(checkbox => checkbox.checked);
-            
-            checkboxes.forEach(checkbox => {
-                checkbox.checked = !allSelected;
-            });
-            
-            selectAllBtn.innerHTML = allSelected ? 
-                '<i class="fas fa-check-circle"></i> Select All Files' : 
-                '<i class="fas fa-times-circle"></i> Deselect All Files';
-        });
-        
-        // Share via Telegram
-        telegramDownload.addEventListener('click', (e) => {
-            e.preventDefault();
-            const selectedFiles = document.querySelectorAll('.file-checkbox:checked');
-            
-            if (selectedFiles.length === 0) {
-                showAlert('Please select at least one file');
-                return;
-            }
-            
-            // Collect file data
-            const files = Array.from(selectedFiles).map(checkbox => ({
-                url: checkbox.dataset.url,
-                name: checkbox.dataset.name,
-                size: parseInt(checkbox.dataset.size),
-                type: checkbox.dataset.name.split('.').pop().toLowerCase()
-            }));
-            
-            // Check for large files (Telegram limit: 50MB for bots)
-            const largeFiles = files.filter(file => file.size > 50 * 1024 * 1024);
-            if (largeFiles.length > 0) {
-                showAlert(`Some files are too large (>50MB): ${largeFiles.map(f => f.name).join(', ')}`);
-                return;
-            }
-            
-            // Prepare the share preview
-            sharePreview.innerHTML = '';
-            files.forEach(file => {
-                const previewItem = document.createElement('div');
-                previewItem.className = 'share-preview-item';
-                previewItem.innerHTML = `
-                    <div class="share-file-icon">${getFileIcon(file.type)}</div>
-                    <div class="share-file-name">${file.name}</div>
-                `;
-                previewItem.dataset.url = file.url;
-                previewItem.dataset.name = file.name;
-                previewItem.dataset.size = file.size;
-                previewItem.dataset.type = file.type;
-                sharePreview.appendChild(previewItem);
-            });
-            
-            // Update modal text
-            shareModalTitle.textContent = `Share ${files.length} Files`;
-            shareModalMessage.textContent = `You're about to share ${files.length} resources:`;
-            
-            // Show the share modal
-            shareModal.classList.add('active');
-        });
-        
-        // Confirm sharing
-        shareConfirmBtn.addEventListener('click', () => {
-            const fileItems = document.querySelectorAll('#share-preview .share-preview-item');
-            const files = Array.from(fileItems).map(item => ({
-                url: item.dataset.url,
-                name: item.dataset.name,
-                size: parseInt(item.dataset.size),
-                type: item.dataset.type
-            }));
-            
-            if (files.length === 0) {
-                showAlert('No files selected for sharing');
-                shareModal.classList.remove('active');
-                return;
-            }
-            
-            // Share via Telegram
-            if (tg) {
-                try {
-                    tg.sendData(JSON.stringify({
-                        action: 'share_resources',
-                        files: files.map(file => ({
-                            url: file.url,
-                            name: file.name,
-                            size: file.size,
-                            type: file.type
-                        }))
-                    }));
-                    showAlert(`Requested to send ${files.length} file(s) to Telegram`, 'success');
-                } catch (error) {
-                    showAlert(`Error sending files: ${error.message}`);
-                    console.error('Error in tg.sendData:', error);
-                }
-            } else {
-                // Fallback for browsers
-                const text = 'Check out these resources:';
-                const urls = files.map(f => f.url).join('\n');
-                const telegramUrl = `https://t.me/share/url?url=${encodeURIComponent(urls)}&text=${encodeURIComponent(text)}`;
-                window.open(telegramUrl, '_blank');
-                showAlert('Opened Telegram share link in new tab', 'success');
-            }
-            
-            // Close the modal
-            shareModal.classList.remove('active');
-        });
-        
-        // Cancel sharing
-        shareCancelBtn.addEventListener('click', () => {
-            shareModal.classList.remove('active');
-        });
-        
-        // File upload handling
-        browseBtn.addEventListener('click', () => {
-            fileInput.click();
-        });
-        
-        fileInput.addEventListener('change', handleFileSelect);
-        
-        // Drag and drop
-        uploadArea.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            uploadArea.classList.add('active');
-        });
-        
-        uploadArea.addEventListener('dragleave', () => {
-            uploadArea.classList.remove('active');
-        });
-        
-        uploadArea.addEventListener('drop', (e) => {
-            e.preventDefault();
-            uploadArea.classList.remove('active');
-            
-            if (e.dataTransfer.files.length) {
-                fileInput.files = e.dataTransfer.files;
-                handleFileSelect();
-            }
-        });
-        
-        // Handle file selection
-        function handleFileSelect() {
-            filePreview.innerHTML = '';
-            
-            for (const file of fileInput.files) {
-                const fileName = file.name;
-                const fileType = fileName.split('.').pop().toLowerCase();
-                
-                const previewItem = document.createElement('div');
-                previewItem.className = 'preview-item';
-                previewItem.innerHTML = `
-                    <div class="preview-icon">${getFileIcon(fileType)}</div>
-                    <div class="preview-name">${fileName}</div>
-                    <div class="file-size">${formatFileSize(file.size)}</div>
-                    <button class="remove-file">&times;</button>
-                `;
-                
-                filePreview.appendChild(previewItem);
-            }
-            
-            // Add event listeners to remove buttons
-            document.querySelectorAll('.remove-file').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    this.parentElement.remove();
-                });
-            });
-        }
-        
-        // Upload to GitHub
-        uploadBtn.addEventListener('click', () => {
-            const semester = document.getElementById('upload-semester').value;
-            const examType = document.getElementById('upload-exam-type').value;
-            const resourceTypeVal = uploadResourceType.value;
-            const course = uploadCourseSelect.value;
-            
-            if (!semester || !examType || !resourceTypeVal) {
-                showAlert('Please select semester, exam type, and resource type');
-                return;
-            }
-            
-            if (resourceTypeVal !== 'PreviousQuestions' && !course) {
-                showAlert('Please select a course');
-                return;
-            }
-            
-            if (fileInput.files.length === 0) {
-                showAlert('Please select at least one file');
-                return;
-            }
-            
-            // Show uploading state
-            progressBar.style.display = 'block';
-            statusMessage.style.display = 'block';
-            statusMessage.textContent = 'Preparing files...';
-            statusMessage.style.color = '#333';
-            uploadBtn.disabled = true;
-            uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
-            
-            // Simulate upload progress
-            let progressValue = 0;
-            const interval = setInterval(() => {
-                progressValue += 5;
-                progress.style.width = `${progressValue}%`;
-                
-                if (progressValue <= 30) {
-                    statusMessage.textContent = 'Connecting to GitHub...';
-                } else if (progressValue <= 60) {
-                    statusMessage.textContent = 'Uploading files...';
-                } else if (progressValue <= 90) {
-                    statusMessage.textContent = 'Processing files...';
-                }
-                
-                if (progressValue >= 100) {
-                    clearInterval(interval);
-                    setTimeout(() => {
-                        statusMessage.textContent = 'Files uploaded successfully!';
-                        statusMessage.style.color = 'var(--success)';
-                        uploadBtn.innerHTML = '<i class="fas fa-check"></i> Upload Successful!';
-                        uploadBtn.classList.add('btn-success');
-                        
-                        // Reset after success
-                        setTimeout(() => {
-                            progressBar.style.display = 'none';
-                            statusMessage.style.display = 'none';
-                            uploadBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Upload to GitHub';
-                            uploadBtn.disabled = false;
-                            uploadBtn.classList.remove('btn-success');
-                            fileInput.value = '';
-                            filePreview.innerHTML = '';
-                            progress.style.width = '0%';
-                        }, 2500);
-                    }, 500);
-                }
-            }, 150);
-        });
-        
-        // Show alert message
-        function showAlert(message, type = 'error') {
+        // Use a function to show a custom toast message
+        function showToast(message, type = 'success') {
             const alertBox = document.createElement('div');
             alertBox.textContent = message;
             alertBox.style.position = 'fixed';
@@ -1556,7 +627,7 @@
             alertBox.style.transform = 'translateY(100px)';
             alertBox.style.opacity = '0';
             alertBox.style.transition = 'all 0.4s ease';
-            
+
             if (type === 'error') {
                 alertBox.style.background = 'var(--danger)';
             } else {
@@ -1564,13 +635,13 @@
             }
             
             document.body.appendChild(alertBox);
-            
+
             // Animate in
             setTimeout(() => {
                 alertBox.style.transform = 'translateY(0)';
                 alertBox.style.opacity = '1';
             }, 10);
-            
+
             // Remove after delay
             setTimeout(() => {
                 alertBox.style.transform = 'translateY(100px)';
@@ -1580,6 +651,206 @@
                 }, 400);
             }, 3000);
         }
+
+        // Dummy data for demonstration
+        const fileData = [
+            { id: 1, name: "Data Structures & Algorithms Cheat Sheet.pdf", size: "2.1 MB", course: "CSE201", semester: "3rd", type: "Lecture Note", url: "https://example.com/file1.pdf" },
+            { id: 2, name: "Object-Oriented Programming I.pptx", size: "1.5 MB", course: "CSE202", semester: "3rd", type: "Slide", url: "https://example.com/file2.pptx" },
+            { id: 3, name: "Database Systems Lab Report.docx", size: "0.8 MB", course: "CSE305", semester: "5th", type: "Lab Report", url: "https://example.com/file3.docx" },
+            { id: 4, name: "Operating Systems Final Exam.pdf", size: "3.4 MB", course: "CSE301", semester: "5th", type: "Question Paper", url: "https://example.com/file4.pdf" },
+        ];
+
+        // Global variables for Telegram
+        let botToken = "YOUR_BOT_TOKEN_HERE"; // IMPORTANT: Replace with your actual bot token
+        let telegram_user_id = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const tabs = document.querySelectorAll('.tab-btn');
+            const tabContents = document.querySelectorAll('.tab-content');
+            const fileList = document.getElementById('file-list');
+            const resultsMessage = document.getElementById('results-message');
+            const selectAllBtn = document.getElementById('select-all-btn');
+            const sendBtn = document.getElementById('send-btn');
+            const searchBtn = document.getElementById('search-btn');
+            const resetBtn = document.getElementById('reset-btn');
+            const courseFilter = document.getElementById('course-filter');
+            const semesterFilter = document.getElementById('semester-filter');
+            const typeFilter = document.getElementById('type-filter');
+
+            // Telegram Web App Initialization
+            if (window.Telegram && window.Telegram.WebApp) {
+                const twaData = window.Telegram.WebApp;
+                if (twaData.initDataUnsafe && twaData.initDataUnsafe.user) {
+                    telegram_user_id = twaData.initDataUnsafe.user.id;
+                    console.log("Telegram User ID:", telegram_user_id);
+                }
+            } else {
+                console.warn("Telegram Web App not detected. File sending will not work.");
+            }
+
+            // Tab functionality
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tabContents.forEach(content => content.classList.remove('active'));
+                    tab.classList.add('active');
+                    document.getElementById(tab.dataset.tab).classList.add('active');
+                });
+            });
+
+            // Populate filters and display files
+            function populateFiltersAndDisplayFiles(files) {
+                const courses = [...new Set(files.map(file => file.course))];
+                const semesters = [...new Set(files.map(file => file.semester))];
+                const types = [...new Set(files.map(file => file.type))];
+
+                function populateSelect(selectElement, items) {
+                    selectElement.innerHTML = `<option value="">All ${selectElement.id.split('-')[0]}s</option>`;
+                    items.forEach(item => {
+                        const option = document.createElement('option');
+                        option.value = item;
+                        option.textContent = item;
+                        selectElement.appendChild(option);
+                    });
+                }
+                
+                populateSelect(courseFilter, courses);
+                populateSelect(semesterFilter, semesters);
+                populateSelect(typeFilter, types);
+                displayFiles(files);
+            }
+
+            // Display files
+            function displayFiles(files) {
+                fileList.innerHTML = '';
+                if (files.length === 0) {
+                    resultsMessage.textContent = "No files found. Try a new search!";
+                    resultsMessage.style.display = 'block';
+                    sendBtn.disabled = true;
+                } else {
+                    resultsMessage.style.display = 'none';
+                    files.forEach(file => {
+                        const fileItem = document.createElement('li');
+                        fileItem.className = 'file-item';
+                        fileItem.innerHTML = `
+                            <div class="file-icon"><i class="fas fa-file-alt"></i></div>
+                            <div class="file-info">
+                                <div class="file-name">${file.name}</div>
+                                <div class="file-details">${file.size} - ${file.course} (${file.semester})</div>
+                            </div>
+                            <div class="file-actions">
+                                <input type="checkbox" class="file-checkbox" data-url="${file.url}" data-name="${file.name}">
+                            </div>
+                        `;
+                        fileList.appendChild(fileItem);
+                    });
+                    sendBtn.disabled = false;
+                }
+            }
+            
+            // Initial call
+            populateFiltersAndDisplayFiles(fileData);
+
+            // Filter and search
+            function filterFiles() {
+                const selectedCourse = courseFilter.value;
+                const selectedSemester = semesterFilter.value;
+                const selectedType = typeFilter.value;
+
+                const filtered = fileData.filter(file => {
+                    const courseMatch = selectedCourse === '' || file.course === selectedCourse;
+                    const semesterMatch = selectedSemester === '' || file.semester === selectedSemester;
+                    const typeMatch = selectedType === '' || file.type === selectedType;
+                    return courseMatch && semesterMatch && typeMatch;
+                });
+                displayFiles(filtered);
+            }
+            
+            searchBtn.addEventListener('click', filterFiles);
+            resetBtn.addEventListener('click', () => {
+                courseFilter.value = '';
+                semesterFilter.value = '';
+                typeFilter.value = '';
+                displayFiles(fileData);
+            });
+
+            // Select All functionality
+            selectAllBtn.addEventListener('click', () => {
+                const checkboxes = document.querySelectorAll('.file-checkbox');
+                const allSelected = Array.from(checkboxes).every(cb => cb.checked);
+                checkboxes.forEach(cb => cb.checked = !allSelected);
+                sendBtn.disabled = !document.querySelectorAll('.file-checkbox:checked').length;
+            });
+            
+            fileList.addEventListener('change', (e) => {
+                if (e.target.classList.contains('file-checkbox')) {
+                    sendBtn.disabled = !document.querySelectorAll('.file-checkbox:checked').length;
+                }
+            });
+
+            // Send files to Telegram functionality
+            async function sendFilesToTelegram() {
+                if (!botToken || !telegram_user_id) {
+                    showToast("⚠️ Missing Telegram bot token or user ID. Please configure.", "error");
+                    return;
+                }
+
+                const selectedFiles = document.querySelectorAll('.file-item input[type="checkbox"]:checked');
+                if (selectedFiles.length === 0) {
+                    showToast("⚠️ Please select at least one file.", "error");
+                    return;
+                }
+
+                sendBtn.textContent = "Sending...";
+                let successCount = 0;
+                let errorCount = 0;
+                const largeFileLimit = 20 * 1024 * 1024; // 20 MB
+
+                for (const fileCheckbox of selectedFiles) {
+                    const fileUrl = fileCheckbox.dataset.url;
+                    const fileName = fileCheckbox.dataset.name;
+
+                    // Note: file size check is just a placeholder here, as we don't have the size from the URL directly.
+                    // In a real application, you'd need to fetch headers or a dummy file to check the size.
+                    // Assuming for this example that the dummy data has valid sizes under the limit.
+
+                    const sendUrl = `https://api.telegram.org/bot${botToken}/sendDocument`;
+                    const payload = {
+                        chat_id: telegram_user_id,
+                        document: fileUrl,
+                        caption: `📚 ${fileName}\n\nRequested from CSE Resources Portal`
+                    };
+
+                    try {
+                        const res = await fetch(sendUrl, {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json"
+                            },
+                            body: JSON.stringify(payload)
+                        });
+
+                        if (!res.ok) throw new Error("Failed to send file");
+                        successCount++;
+                    } catch (err) {
+                        console.error("Error sending file to Telegram:", err);
+                        errorCount++;
+                    }
+                }
+
+                sendBtn.textContent = "Send to Telegram";
+
+                if (errorCount === 0) {
+                    showToast(`🎉 ${successCount} file(s) sent to your Telegram!`);
+                } else {
+                    let message = `⚠️ ${successCount} sent, ${errorCount} failed`;
+                    showToast(message, "error");
+                }
+            }
+
+            // Event listener for the Telegram button
+            sendBtn.addEventListener('click', sendFilesToTelegram);
+        });
     </script>
 </body>
 </html>
