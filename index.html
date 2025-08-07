@@ -1331,27 +1331,30 @@
             const files = Array.from(selectedFiles).map(checkbox => ({
                 url: checkbox.dataset.url,
                 name: checkbox.dataset.name,
-                size: parseInt(checkbox.dataset.size)
+                size: parseInt(checkbox.dataset.size),
+                type: checkbox.dataset.name.split('.').pop().toLowerCase()
             }));
             
-            // Check for large files
-            const largeFiles = files.filter(file => file.size > 20 * 1024 * 1024);
+            // Check for large files (Telegram limit: 50MB for bots)
+            const largeFiles = files.filter(file => file.size > 50 * 1024 * 1024);
             if (largeFiles.length > 0) {
-                showAlert(`Some files are too large (>20MB): ${largeFiles.map(f => f.name).join(', ')}`);
+                showAlert(`Some files are too large (>50MB): ${largeFiles.map(f => f.name).join(', ')}`);
                 return;
             }
             
             // Prepare the share preview
             sharePreview.innerHTML = '';
             files.forEach(file => {
-                const type = file.name.split('.').pop().toLowerCase();
                 const previewItem = document.createElement('div');
                 previewItem.className = 'share-preview-item';
                 previewItem.innerHTML = `
-                    <div class="share-file-icon">${getFileIcon(type)}</div>
+                    <div class="share-file-icon">${getFileIcon(file.type)}</div>
                     <div class="share-file-name">${file.name}</div>
                 `;
                 previewItem.dataset.url = file.url;
+                previewItem.dataset.name = file.name;
+                previewItem.dataset.size = file.size;
+                previewItem.dataset.type = file.type;
                 sharePreview.appendChild(previewItem);
             });
             
@@ -1368,7 +1371,9 @@
             const fileItems = document.querySelectorAll('#share-preview .share-preview-item');
             const files = Array.from(fileItems).map(item => ({
                 url: item.dataset.url,
-                name: item.querySelector('.share-file-name').textContent
+                name: item.dataset.name,
+                size: parseInt(item.dataset.size),
+                type: item.dataset.type
             }));
             
             if (files.length === 0) {
@@ -1379,20 +1384,32 @@
             
             // Share via Telegram
             if (tg) {
-                tg.sendData(JSON.stringify({
-                    action: 'share_resources',
-                    files: files
-                }));
-                showAlert(`Sent ${files.length} file(s) to Telegram`, 'success');
-                shareModal.classList.remove('active');
+                try {
+                    tg.sendData(JSON.stringify({
+                        action: 'share_resources',
+                        files: files.map(file => ({
+                            url: file.url,
+                            name: file.name,
+                            size: file.size,
+                            type: file.type
+                        }))
+                    }));
+                    showAlert(`Requested to send ${files.length} file(s) to Telegram`, 'success');
+                } catch (error) {
+                    showAlert(`Error sending files: ${error.message}`);
+                    console.error('Error in tg.sendData:', error);
+                }
             } else {
                 // Fallback for browsers
                 const text = 'Check out these resources:';
                 const urls = files.map(f => f.url).join('\n');
                 const telegramUrl = `https://t.me/share/url?url=${encodeURIComponent(urls)}&text=${encodeURIComponent(text)}`;
                 window.open(telegramUrl, '_blank');
-                shareModal.classList.remove('active');
+                showAlert('Opened Telegram share link in new tab', 'success');
             }
+            
+            // Close the modal
+            shareModal.classList.remove('active');
         });
         
         // Cancel sharing
