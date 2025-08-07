@@ -1202,7 +1202,8 @@
                     return {
                         name: item.name,
                         type: item.name.split('.').pop().toLowerCase(),
-                        size: formatFileSize(item.size),
+                        size: item.size,
+                        sizeFormatted: formatFileSize(item.size),
                         date: new Date().toLocaleDateString(),
                         download_url: item.download_url
                     };
@@ -1231,7 +1232,8 @@
                     return {
                         name: item.name,
                         type: item.name.split('.').pop().toLowerCase(),
-                        size: formatFileSize(item.size),
+                        size: item.size,
+                        sizeFormatted: formatFileSize(item.size),
                         date: new Date().toLocaleDateString(),
                         download_url: item.download_url
                     };
@@ -1260,10 +1262,10 @@
                     <div class="file-icon">${getFileIcon(file.type)}</div>
                     <div>
                         <div class="file-name">${file.name}</div>
-                        <div class="file-details">${file.size} • ${file.date}</div>
+                        <div class="file-details">${file.sizeFormatted} • ${file.date}</div>
                     </div>
                     <div class="file-actions">
-                        <input type="checkbox" class="file-checkbox" data-url="${file.download_url}">
+                        <input type="checkbox" class="file-checkbox" data-url="${file.download_url}" data-name="${file.name}" data-size="${file.size}">
                         <button class="action-btn" title="Preview">
                             <i class="fas fa-eye"></i>
                         </button>
@@ -1325,43 +1327,51 @@
                 return;
             }
             
-            // Collect the download URLs
-            const fileUrls = [];
-            const fileNames = [];
-            selectedFiles.forEach(checkbox => {
-                fileUrls.push(checkbox.dataset.url);
-                fileNames.push(checkbox.closest('.file-item').querySelector('.file-name').textContent);
-            });
+            // Collect file data
+            const files = Array.from(selectedFiles).map(checkbox => ({
+                url: checkbox.dataset.url,
+                name: checkbox.dataset.name,
+                size: parseInt(checkbox.dataset.size)
+            }));
+            
+            // Check for large files
+            const largeFiles = files.filter(file => file.size > 20 * 1024 * 1024);
+            if (largeFiles.length > 0) {
+                showAlert(`Some files are too large (>20MB): ${largeFiles.map(f => f.name).join(', ')}`);
+                return;
+            }
             
             // Prepare the share preview
             sharePreview.innerHTML = '';
-            fileNames.forEach((name, index) => {
-                const type = name.split('.').pop().toLowerCase();
+            files.forEach(file => {
+                const type = file.name.split('.').pop().toLowerCase();
                 const previewItem = document.createElement('div');
                 previewItem.className = 'share-preview-item';
                 previewItem.innerHTML = `
                     <div class="share-file-icon">${getFileIcon(type)}</div>
-                    <div class="share-file-name">${name}</div>
+                    <div class="share-file-name">${file.name}</div>
                 `;
+                previewItem.dataset.url = file.url;
                 sharePreview.appendChild(previewItem);
             });
             
             // Update modal text
-            shareModalTitle.textContent = `Share ${selectedFiles.length} Files`;
-            shareModalMessage.textContent = `You're about to share ${selectedFiles.length} resources:`;
+            shareModalTitle.textContent = `Share ${files.length} Files`;
+            shareModalMessage.textContent = `You're about to share ${files.length} resources:`;
             
             // Show the share modal
             shareModal.classList.add('active');
-            
-            // Store the file URLs for sharing
-            shareConfirmBtn.dataset.files = JSON.stringify(fileUrls);
         });
         
         // Confirm sharing
         shareConfirmBtn.addEventListener('click', () => {
-            const fileUrls = JSON.parse(shareConfirmBtn.dataset.files || '[]');
+            const fileItems = document.querySelectorAll('#share-preview .share-preview-item');
+            const files = Array.from(fileItems).map(item => ({
+                url: item.dataset.url,
+                name: item.querySelector('.share-file-name').textContent
+            }));
             
-            if (fileUrls.length === 0) {
+            if (files.length === 0) {
                 showAlert('No files selected for sharing');
                 shareModal.classList.remove('active');
                 return;
@@ -1369,34 +1379,20 @@
             
             // Share via Telegram
             if (tg) {
-                // Create a message with file links
-                let message = "Here are the resources I found:\n\n";
-                fileUrls.forEach(url => {
-                    message += `🔗 ${url}\n`;
-                });
-                
-                // Send the message to the bot
                 tg.sendData(JSON.stringify({
-                    action: "share_resources",
-                    files: fileUrls
+                    action: 'share_resources',
+                    files: files
                 }));
-                
-                // Close the Mini App
-                setTimeout(() => {
-                    tg.close();
-                }, 1000);
+                showAlert(`Sent ${files.length} file(s) to Telegram`, 'success');
+                shareModal.classList.remove('active');
             } else {
-                // For browsers - create a shareable link
-                const text = "Check out these resources:";
-                const urls = fileUrls.join("%0A");
+                // Fallback for browsers
+                const text = 'Check out these resources:';
+                const urls = files.map(f => f.url).join('\n');
                 const telegramUrl = `https://t.me/share/url?url=${encodeURIComponent(urls)}&text=${encodeURIComponent(text)}`;
-                
-                // Open in a new tab
                 window.open(telegramUrl, '_blank');
+                shareModal.classList.remove('active');
             }
-            
-            // Close the modal
-            shareModal.classList.remove('active');
         });
         
         // Cancel sharing
