@@ -1103,8 +1103,9 @@
                         
                         const fileSize = file.size;
                         const isLargeFile = fileSize > 20 * 1024 * 1024;
+                        const fileUrl = `${GITHUB_RAW_URL}/${path}/${encodeURIComponent(file.name)}`;
 
-                        const fileDataAttributes = `data-filename="${file.name}" data-path="${path}" data-filesize="${fileSize}"`;
+                        const fileDataAttributes = `data-name="${file.name}" data-size="${fileSize}" data-url="${fileUrl}" data-filename="${file.name}" data-path="${path}" data-filesize="${fileSize}"`;
                         
                         const previewBtn = isPreviewable(file.name) ? `
                             <button class="preview-btn" ${fileDataAttributes} title="Preview">
@@ -1153,31 +1154,35 @@
             checkboxes.forEach(checkbox => checkbox.checked = !allChecked);
         }
 
-        function getOnTelegram() {
+        async function sendSelectedToTelegram() {
             const telegramBtn = document.getElementById('telegramBtn');
-            const selectedFiles = Array.from(document.querySelectorAll('.file-checkbox:checked'));
-            const validFiles = selectedFiles.filter(checkbox => {
-                const row = checkbox.closest('.file-row');
-                return !row.querySelector('.file-warning');
-            });
+            const selected = Array.from(document.querySelectorAll('#fileList input[type="checkbox"]:checked'));
 
-            if (validFiles.length === 0) {
-                showToast('No valid files selected (skip files >20MB)', 'warning');
-                console.warn('No valid files selected for Telegram');
+            if (selected.length === 0) {
+                showToast('Please select at least one file to send', 'error');
+                console.warn('No files selected for Telegram');
                 return;
             }
 
             telegramBtn.innerHTML = '<span class="loading"></span> Sending...';
             telegramBtn.disabled = true;
 
-            const fileData = validFiles.map(checkbox => {
-                const filename = checkbox.dataset.filename;
-                const path = checkbox.dataset.path;
-                const url = `${GITHUB_RAW_URL}/${path}/${encodeURIComponent(filename)}`;
-                return { name: filename, url: url };
-            });
+            const validFiles = selected.filter(checkbox => parseInt(checkbox.dataset.size) <= 20 * 1024 * 1024);
+            const largeFileCount = selected.length - validFiles.length;
 
-            console.log('Prepared file data for Telegram:', fileData);
+            if (validFiles.length === 0) {
+                showToast(`No valid files selected (${largeFileCount} large files skipped)`, 'warning');
+                console.warn('No valid files selected for Telegram');
+                telegramBtn.innerHTML = '<i class="fab fa-telegram"></i> Get on Telegram';
+                telegramBtn.disabled = false;
+                return;
+            }
+
+            const fileData = validFiles.map(checkbox => ({
+                name: checkbox.dataset.name,
+                url: checkbox.dataset.url,
+                size: parseInt(checkbox.dataset.size)
+            }));
 
             if (window.Telegram && window.Telegram.WebApp && typeof window.Telegram.WebApp.sendData === 'function') {
                 try {
@@ -1189,13 +1194,13 @@
                     });
                     console.log('Sending data to Telegram:', dataToSend);
                     window.Telegram.WebApp.sendData(dataToSend);
-                    showToast(`${validFiles.length} file${validFiles.length > 1 ? 's' : ''} sent to Telegram`, 'success');
+                    showToast(`🎉 ${validFiles.length} file${validFiles.length > 1 ? 's' : ''} sent to Telegram${largeFileCount > 0 ? ` (${largeFileCount} large files skipped)` : ''}`, 'success');
                 } catch (error) {
                     console.error('Telegram Web App error:', error);
                     showToast(`Failed to send to Telegram: ${error.message}`, 'error');
                 }
             } else {
-                console.warn('Telegram Web App not available or sendData not supported. Falling back to browser mode.');
+                console.warn('Telegram Web App not available. Falling back to browser mode.');
                 showToast('Not in Telegram. Opening files in browser.', 'warning');
                 fileData.forEach(file => {
                     console.log('Opening file in browser:', file.url);
@@ -1273,7 +1278,7 @@
 
             searchBtn.addEventListener('click', fetchFiles);
             selectAllBtn.addEventListener('click', toggleSelectAll);
-            telegramBtn.addEventListener('click', getOnTelegram);
+            telegramBtn.addEventListener('click', sendSelectedToTelegram);
             themeToggle.addEventListener('click', toggleTheme);
 
             semesterDropdown.addEventListener('change', () => {
@@ -1318,6 +1323,13 @@
                 if (e.target === previewModal) {
                     closePreview();
                 }
+            });
+
+            // Add smooth scroll behavior
+            document.querySelectorAll('select, button').forEach(element => {
+                element.addEventListener('focus', () => {
+                    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                });
             });
 
             if (window.Telegram && window.Telegram.WebApp) {
