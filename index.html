@@ -1175,7 +1175,7 @@
             checkboxes.forEach(checkbox => checkbox.checked = !allChecked);
         }
 
-        function getOnTelegram() {
+        <!--function getOnTelegram() {
             const telegramBtn = document.getElementById('telegramBtn');
             const selectedFiles = Array.from(document.querySelectorAll('.file-checkbox:checked'));
             const validFiles = selectedFiles.filter(checkbox => {
@@ -1199,7 +1199,69 @@
                 telegramBtn.disabled = false;
             }, 2000);
         }
-        
+        -->
+
+        function getOnTelegram() {
+        const telegramBtn = document.getElementById('telegramBtn');
+        const selectedFiles = Array.from(document.querySelectorAll('.file-checkbox:checked'));
+        const validFiles = selectedFiles.filter(checkbox => {
+            const row = checkbox.closest('.file-row');
+            return !row.querySelector('.file-warning'); // Skip rows with >20MB
+        });
+
+        if (validFiles.length === 0) {
+            showToast('No valid files selected (skip files >20MB)', 'warning');
+            return;
+        }
+
+        const tgUserId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id;
+        if (!tgUserId) {
+            showToast('Telegram user ID not found. Please open in Telegram.', 'error');
+            return;
+        }
+
+        const botToken = "7616102961:AAHqU8SwIZtPCwmx34TqTbmgECHx1h0w4JI"; // Replace with your bot token
+        telegramBtn.innerHTML = '<span class="loading"></span> Sending...';
+        telegramBtn.disabled = true;
+
+        let successCount = 0;
+        let errorCount = 0;
+
+        (async () => {
+            for (let cb of validFiles) {
+                const filename = cb.dataset.filename;
+                const path = cb.dataset.path;
+                const fileUrl = `${GITHUB_RAW_URL}/${path}/${filename}`;
+
+                try {
+                    const res = await fetch(`https://api.telegram.org/bot${botToken}/sendDocument`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            chat_id: tgUserId,
+                            document: fileUrl,
+                            caption: `📄 ${filename}`
+                        })
+                    });
+
+                    if (!res.ok) throw new Error();
+                    successCount++;
+                } catch {
+                    errorCount++;
+                }
+            }
+
+            telegramBtn.innerHTML = '<i class="fab fa-telegram"></i> Get on Telegram';
+            telegramBtn.disabled = false;
+
+            if (errorCount === 0) {
+                showToast(`✅ ${successCount} file(s) sent to your Telegram!`, 'success');
+            } else {
+                showToast(`⚠️ ${successCount} sent, ${errorCount} failed`, 'warning');
+            }
+        })();
+    }
+
         // --- NEW SECURE FILE HANDLING FUNCTIONS ---
         
         // General function to fetch file content securely
