@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Academic Resource Hub</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
@@ -291,6 +293,12 @@
 
         .btn-telegram {
             background: linear-gradient(135deg, #0088cc, #006699);
+            color: white;
+            position: relative;
+        }
+
+        .btn-download {
+            background: linear-gradient(135deg, #00c853, #009624);
             color: white;
             position: relative;
         }
@@ -835,7 +843,7 @@
     
     <div class="telegram-connection" id="telegramStatus">
         <i class="fab fa-telegram telegram-disconnected"></i>
-        <span>Telegram: Not connected</span>
+        <span id="telegramStatusText">Telegram: Not connected</span>
     </div>
     
     <div class="container">
@@ -893,7 +901,7 @@
                     <button class="btn btn-secondary" id="selectAllBtn">
                         <i class="fas fa-check-circle"></i> Select All
                     </button>
-                    <button class="btn btn-telegram" id="telegramBtn">
+                    <button class="btn" id="actionBtn">
                         <i class="fab fa-telegram"></i> Send to Telegram
                         <span class="telegram-badge" id="selectedCount">0</span>
                     </button>
@@ -934,18 +942,18 @@
     <div class="modal-overlay" id="confirmationModal">
         <div class="modal">
             <div class="modal-header">
-                <h3 class="modal-title"><i class="fab fa-telegram"></i> Confirm File Transfer</h3>
+                <h3 class="modal-title" id="modalTitle"><i class="fab fa-telegram"></i> Confirm File Transfer</h3>
                 <button class="close-modal" id="closeModal">&times;</button>
             </div>
             <div class="modal-body">
-                <p>You are about to send <strong><span id="fileCount">0</span> files</strong> to Telegram. This may take a few moments.</p>
+                <p id="modalMessage">You are about to send <strong><span id="fileCount">0</span> files</strong> to Telegram. This may take a few moments.</p>
                 <div class="modal-file-list" id="modalFileList">
                     <!-- Files will be listed here -->
                 </div>
             </div>
             <div class="modal-buttons">
                 <button class="btn btn-secondary" id="cancelSend">Cancel</button>
-                <button class="btn btn-telegram" id="confirmSend">
+                <button class="btn" id="confirmAction">
                     <i class="fab fa-telegram"></i> Send Now
                 </button>
             </div>
@@ -961,18 +969,21 @@
         const courseLabel = document.getElementById('courseLabel');
         const searchBtn = document.getElementById('searchBtn');
         const selectAllBtn = document.getElementById('selectAllBtn');
-        const telegramBtn = document.getElementById('telegramBtn');
+        const actionBtn = document.getElementById('actionBtn');
         const fileList = document.getElementById('fileList');
         const toastContainer = document.getElementById('toastContainer');
         const loadingOverlay = document.getElementById('loadingOverlay');
         const telegramStatus = document.getElementById('telegramStatus');
+        const telegramStatusText = document.getElementById('telegramStatusText');
         const selectedCount = document.getElementById('selectedCount');
         const confirmationModal = document.getElementById('confirmationModal');
         const closeModal = document.getElementById('closeModal');
         const cancelSend = document.getElementById('cancelSend');
-        const confirmSend = document.getElementById('confirmSend');
+        const confirmAction = document.getElementById('confirmAction');
         const fileCount = document.getElementById('fileCount');
         const modalFileList = document.getElementById('modalFileList');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalMessage = document.getElementById('modalMessage');
         
         // Telegram Bot Token
         const BOT_TOKEN = '7616102961:AAHqU8SwIZtPCwmx34TqTbmgECHx1h0w4JI';
@@ -1025,19 +1036,32 @@
                         `;
                         showToast('Telegram connection established', 'success');
                     } else {
-                        telegramStatus.innerHTML = `
-                            <i class="fab fa-telegram telegram-disconnected"></i>
-                            <span>Telegram: Connect via Telegram app</span>
-                        `;
+                        telegramStatusText.textContent = 'Telegram: Connect via Telegram app';
                     }
                 }
             } catch (e) {
                 console.error('Telegram WebApp initialization error:', e);
-                telegramStatus.innerHTML = `
-                    <i class="fab fa-telegram telegram-disconnected"></i>
-                    <span>Telegram: Connection failed</span>
-                `;
+                telegramStatusText.textContent = 'Telegram: Connection failed';
             }
+            
+            // Update UI based on Telegram connection
+            updateActionButton();
+        }
+
+        // Update action button based on context
+        function updateActionButton() {
+            if (isTelegramConnected) {
+                actionBtn.innerHTML = '<i class="fab fa-telegram"></i> Send to Telegram';
+                actionBtn.classList.add('btn-telegram');
+                actionBtn.classList.remove('btn-download');
+            } else {
+                actionBtn.innerHTML = '<i class="fas fa-download"></i> Download Selected';
+                actionBtn.classList.add('btn-download');
+                actionBtn.classList.remove('btn-telegram');
+            }
+            
+            // Update badge
+            updateSelectedCount();
         }
 
         // Fetch folder structure from GitHub
@@ -1344,6 +1368,21 @@
                 modalFileList.appendChild(listItem);
             });
             
+            // Update modal based on context
+            if (isTelegramConnected) {
+                modalTitle.innerHTML = '<i class="fab fa-telegram"></i> Confirm File Transfer';
+                modalMessage.innerHTML = `You are about to send <strong>${validFiles.length} files</strong> to Telegram. This may take a few moments.`;
+                confirmAction.innerHTML = '<i class="fab fa-telegram"></i> Send Now';
+                confirmAction.classList.add('btn-telegram');
+                confirmAction.classList.remove('btn-download');
+            } else {
+                modalTitle.innerHTML = '<i class="fas fa-download"></i> Confirm Download';
+                modalMessage.innerHTML = `You are about to download <strong>${validFiles.length} files</strong>. Large files may take longer to download.`;
+                confirmAction.innerHTML = '<i class="fas fa-download"></i> Download Now';
+                confirmAction.classList.add('btn-download');
+                confirmAction.classList.remove('btn-telegram');
+            }
+            
             // Show modal
             confirmationModal.classList.add('active');
         }
@@ -1364,8 +1403,8 @@
             });
             
             // Show loading state
-            telegramBtn.innerHTML = '<span class="loading"></span> Sending...';
-            telegramBtn.disabled = true;
+            actionBtn.innerHTML = '<span class="loading"></span> Sending...';
+            actionBtn.disabled = true;
             confirmationModal.classList.remove('active');
             
             try {
@@ -1385,8 +1424,8 @@
                 console.error('Telegram send error:', error);
                 showToast(`Failed to send files: ${error.message}`, 'error');
             } finally {
-                telegramBtn.innerHTML = '<i class="fab fa-telegram"></i> Send to Telegram';
-                telegramBtn.disabled = false;
+                updateActionButton();
+                actionBtn.disabled = false;
                 
                 // Deselect all files
                 document.querySelectorAll('.file-checkbox').forEach(cb => cb.checked = false);
@@ -1433,6 +1472,73 @@
                 throw new Error(`Failed to send ${file.name}: ${error.message}`);
             }
         }
+        
+        // Download selected files as ZIP
+        async function downloadSelectedFiles() {
+            const validFiles = selectedFiles.filter(checkbox => {
+                const row = checkbox.closest('.file-row');
+                return !row.querySelector('.file-warning'); // Skip rows with warning
+            });
+            
+            if (validFiles.length === 0) {
+                showToast('No valid files selected', 'error');
+                return;
+            }
+            
+            // Show loading state
+            actionBtn.innerHTML = '<span class="loading"></span> Preparing...';
+            actionBtn.disabled = true;
+            confirmationModal.classList.remove('active');
+            showLoading(true);
+            
+            try {
+                const zip = new JSZip();
+                
+                // Add files to ZIP
+                for (const checkbox of validFiles) {
+                    const fileName = checkbox.dataset.name;
+                    const fileUrl = checkbox.dataset.url;
+                    
+                    try {
+                        const response = await fetch(fileUrl);
+                        if (!response.ok) throw new Error(`Failed to download ${fileName}`);
+                        
+                        const blob = await response.blob();
+                        zip.file(fileName, blob);
+                    } catch (error) {
+                        console.error(`Error downloading ${fileName}:`, error);
+                        showToast(`Failed to download ${fileName}`, 'error');
+                    }
+                }
+                
+                // Generate ZIP file
+                const content = await zip.generateAsync({type: "blob"});
+                
+                // Download ZIP
+                const url = URL.createObjectURL(content);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'academic-resources.zip';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                showToast(`${validFiles.length} files downloaded as ZIP`, 'success');
+            } catch (error) {
+                console.error('ZIP creation error:', error);
+                showToast(`Failed to create ZIP: ${error.message}`, 'error');
+            } finally {
+                showLoading(false);
+                updateActionButton();
+                actionBtn.disabled = false;
+                
+                // Deselect all files
+                document.querySelectorAll('.file-checkbox').forEach(cb => cb.checked = false);
+                document.querySelectorAll('.file-row').forEach(row => row.classList.remove('selected'));
+                updateSelectedCount();
+            }
+        }
 
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
@@ -1443,8 +1549,14 @@
             // Event listeners
             searchBtn.addEventListener('click', fetchFiles);
             selectAllBtn.addEventListener('click', toggleSelectAll);
-            telegramBtn.addEventListener('click', showConfirmationModal);
-            confirmSend.addEventListener('click', sendToTelegram);
+            actionBtn.addEventListener('click', showConfirmationModal);
+            confirmAction.addEventListener('click', () => {
+                if (isTelegramConnected) {
+                    sendToTelegram();
+                } else {
+                    downloadSelectedFiles();
+                }
+            });
             closeModal.addEventListener('click', () => confirmationModal.classList.remove('active'));
             cancelSend.addEventListener('click', () => confirmationModal.classList.remove('active'));
             
