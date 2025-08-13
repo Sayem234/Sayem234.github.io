@@ -67,7 +67,6 @@
             transition: all 0.3s ease;
         }
         
-        /* Starfield background animation */
         #star-canvas {
             position: fixed;
             top: 0;
@@ -103,7 +102,6 @@
             align-items: center;
             padding: 20px 30px;
             margin-bottom: 30px;
-            /* Using new header variables */
             background: var(--header-bg-color);
             backdrop-filter: blur(12px);
             border-radius: 16px;
@@ -120,7 +118,6 @@
         .logo-icon {
             width: 50px;
             height: 50px;
-            /* Blue gradient for both themes, as requested */
             background: linear-gradient(135deg, #4895ef, #4361ee);
             border-radius: 12px;
             display: flex;
@@ -134,7 +131,6 @@
         .logo-text h1 {
             font-size: 1.8rem;
             font-weight: 700;
-            /* White text for both themes, as requested */
             color: var(--header-text-color);
             margin-bottom: 4px;
         }
@@ -647,7 +643,6 @@
             }
         }
 
-        /* --- New Preview Modal CSS --- */
         .preview-modal {
             position: fixed;
             top: 0;
@@ -838,15 +833,11 @@
             font-size: 0.9rem;
             color: var(--light-text);
         }
-
     </style>
 </head>
 <body>
-
-    <!-- ADDED CANVAS ELEMENT FOR STAR ANIMATION -->
     <canvas id="star-canvas"></canvas>
 
-    <!-- NEW PREVIEW MODAL STRUCTURE -->
     <div class="preview-modal" id="previewModal">
         <div class="preview-content">
             <div class="preview-header">
@@ -942,7 +933,6 @@
     <div class="toast-container" id="toastContainer"></div>
 
     <script>
-        // --- GITHUB REPO CONFIGURATION ---
         const GITHUB_REPO_OWNER = '11UCRES';
         const GITHUB_REPO_NAME = 'cse';
         const GITHUB_API_URL = `https://api.github.com/repos/${GITHUB_REPO_OWNER}/${GITHUB_REPO_NAME}/contents`;
@@ -959,15 +949,12 @@
         const themeToggle = document.getElementById('themeToggle');
         const toastContainer = document.getElementById('toastContainer');
         const loadingOverlay = document.getElementById('loadingOverlay');
-
-        // New elements for the preview modal
         const previewModal = document.getElementById('previewModal');
         const previewTitle = document.getElementById('previewTitle');
         const previewFrame = document.getElementById('previewFrame');
         const closePreviewBtn = document.getElementById('closePreview');
         const downloadPreviewBtn = document.getElementById('downloadPreview');
 
-        // Theme and utility functions
         function initTheme() {
             const isDark = localStorage.getItem('theme') === 'dark';
             document.body.classList.toggle('dark-theme', isDark);
@@ -1033,7 +1020,6 @@
             }
         }
         
-        // Function to check if a file type is previewable
         function isPreviewable(filename) {
             const extension = filename.split('.').pop().toLowerCase();
             const previewableExtensions = ['pdf', 'jpg', 'jpeg', 'png', 'gif', 'txt', 'md', 'html'];
@@ -1122,12 +1108,10 @@
                         fileRow.classList.add('file-row');
                         
                         const fileSize = file.size;
-                        const isLargeFile = fileSize > 20 * 1024 * 1024; // 20 MB
+                        const isLargeFile = fileSize > 20 * 1024 * 1024;
 
-                        // Create data attributes to store file info without exposing URL
                         const fileDataAttributes = `data-filename="${file.name}" data-path="${path}" data-filesize="${fileSize}"`;
                         
-                        // Only add preview button for previewable file types
                         const previewBtn = isPreviewable(file.name) ? `
                             <button class="preview-btn" ${fileDataAttributes} title="Preview">
                                 <i class="fas fa-eye"></i>
@@ -1175,96 +1159,49 @@
             checkboxes.forEach(checkbox => checkbox.checked = !allChecked);
         }
 
-        <!--function getOnTelegram() {
+        function getOnTelegram() {
             const telegramBtn = document.getElementById('telegramBtn');
             const selectedFiles = Array.from(document.querySelectorAll('.file-checkbox:checked'));
             const validFiles = selectedFiles.filter(checkbox => {
                 const row = checkbox.closest('.file-row');
-                return !row.querySelector('.file-warning'); // Skip rows with warning
+                return !row.querySelector('.file-warning');
             });
-            
+
             if (validFiles.length === 0) {
                 showToast('No valid files selected (skip files >20MB)', 'warning');
                 return;
             }
-            
-            // Show loading state
+
             telegramBtn.innerHTML = '<span class="loading"></span> Sending...';
             telegramBtn.disabled = true;
-            
-            // Simulate sending to Telegram
+
+            const fileData = validFiles.map(checkbox => ({
+                name: checkbox.dataset.filename,
+                url: `${GITHUB_RAW_URL}/${checkbox.dataset.path}/${checkbox.dataset.filename}`
+            }));
+
+            if (window.Telegram && window.Telegram.WebApp) {
+                try {
+                    window.Telegram.WebApp.sendData(JSON.stringify({
+                        type: 'file_list',
+                        files: fileData
+                    }));
+                    showToast(`${validFiles.length} files sent to Telegram`, 'success');
+                } catch (error) {
+                    console.error('Telegram Web App error:', error);
+                    showToast('Failed to send files to Telegram', 'error');
+                }
+            } else {
+                showToast('Telegram Web App not available. Running in browser mode.', 'warning');
+                console.log('File URLs:', fileData);
+            }
+
             setTimeout(() => {
-                showToast(`${validFiles.length} files sent to Telegram`, 'success');
                 telegramBtn.innerHTML = '<i class="fab fa-telegram"></i> Get on Telegram';
                 telegramBtn.disabled = false;
-            }, 2000);
-        }
-        -->
-
-        function getOnTelegram() {
-        const telegramBtn = document.getElementById('telegramBtn');
-        const selectedFiles = Array.from(document.querySelectorAll('.file-checkbox:checked'));
-        const validFiles = selectedFiles.filter(checkbox => {
-            const row = checkbox.closest('.file-row');
-            return !row.querySelector('.file-warning'); // Skip rows with >20MB
-        });
-
-        if (validFiles.length === 0) {
-            showToast('No valid files selected (skip files >20MB)', 'warning');
-            return;
+            }, 1000);
         }
 
-        const tgUserId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id;
-        if (!tgUserId) {
-            showToast('Telegram user ID not found. Please open in Telegram.', 'error');
-            return;
-        }
-
-        const botToken = "7616102961:AAHqU8SwIZtPCwmx34TqTbmgECHx1h0w4JI"; // Replace with your bot token
-        telegramBtn.innerHTML = '<span class="loading"></span> Sending...';
-        telegramBtn.disabled = true;
-
-        let successCount = 0;
-        let errorCount = 0;
-
-        (async () => {
-            for (let cb of validFiles) {
-                const filename = cb.dataset.filename;
-                const path = cb.dataset.path;
-                const fileUrl = `${GITHUB_RAW_URL}/${path}/${filename}`;
-
-                try {
-                    const res = await fetch(`https://api.telegram.org/bot${botToken}/sendDocument`, {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                            chat_id: tgUserId,
-                            document: fileUrl,
-                            caption: `📄 ${filename}`
-                        })
-                    });
-
-                    if (!res.ok) throw new Error();
-                    successCount++;
-                } catch {
-                    errorCount++;
-                }
-            }
-
-            telegramBtn.innerHTML = '<i class="fab fa-telegram"></i> Get on Telegram';
-            telegramBtn.disabled = false;
-
-            if (errorCount === 0) {
-                showToast(`✅ ${successCount} file(s) sent to your Telegram!`, 'success');
-            } else {
-                showToast(`⚠️ ${successCount} sent, ${errorCount} failed`, 'warning');
-            }
-        })();
-    }
-
-        // --- NEW SECURE FILE HANDLING FUNCTIONS ---
-        
-        // General function to fetch file content securely
         async function fetchFileContent(filePath, callback) {
             showLoading(true);
             try {
@@ -1279,7 +1216,6 @@
             }
         }
 
-        // Function to handle secure download
         function handleDownload(filename, path) {
             fetchFileContent(`${path}/${filename}`, async (response) => {
                 const blob = await response.blob();
@@ -1290,11 +1226,10 @@
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
-                URL.revokeObjectURL(url); // Clean up the temporary URL
+                URL.revokeObjectURL(url);
             });
         }
-        
-        // Function to show the preview modal securely
+
         function showPreview(filename, path) {
             previewTitle.textContent = filename;
             
@@ -1304,7 +1239,6 @@
                 
                 previewFrame.src = url;
                 
-                // Update the download button in the modal to use the blob URL
                 downloadPreviewBtn.onclick = () => {
                     const a = document.createElement('a');
                     a.href = url;
@@ -1312,8 +1246,6 @@
                     document.body.appendChild(a);
                     a.click();
                     document.body.removeChild(a);
-                    // Do not revoke the URL here, as the iframe might still need it.
-                    // The URL will be revoked when the modal is closed.
                 };
                 
                 previewModal.classList.add('active');
@@ -1322,19 +1254,16 @@
 
         function closePreview() {
             previewModal.classList.remove('active');
-            previewFrame.src = ''; // Clear the iframe content
-            // Revoke the blob URL when the modal is closed to free up memory
+            previewFrame.src = '';
             if (previewFrame.src.startsWith('blob:')) {
                  URL.revokeObjectURL(previewFrame.src);
             }
         }
         
-        // Initialize
         document.addEventListener('DOMContentLoaded', () => {
             initTheme();
             fetchGitHubStructure();
             
-            // Event listeners for main buttons
             searchBtn.addEventListener('click', fetchFiles);
             selectAllBtn.addEventListener('click', toggleSelectAll);
             telegramBtn.addEventListener('click', getOnTelegram);
@@ -1360,7 +1289,6 @@
                 }
             });
             
-            // Event delegation for dynamically created download and preview buttons
             fileList.addEventListener('click', (e) => {
                 const downloadBtn = e.target.closest('.download-btn');
                 const previewBtn = e.target.closest('.preview-btn');
@@ -1378,7 +1306,6 @@
                 }
             });
 
-            // Event listeners for the modal
             closePreviewBtn.addEventListener('click', closePreview);
             previewModal.addEventListener('click', (e) => {
                 if (e.target === previewModal) {
@@ -1386,13 +1313,15 @@
                 }
             });
             
-            // Show welcome toast
             setTimeout(() => {
                 showToast('Welcome to University Resource Finder! Select your preferences to find course files.', 'success');
             }, 1000);
+
+            if (window.Telegram && window.Telegram.WebApp) {
+                window.Telegram.WebApp.ready();
+            }
         });
 
-        // Starfield background animation
         const canvas = document.getElementById('star-canvas');
         const ctx = canvas.getContext('2d');
 
