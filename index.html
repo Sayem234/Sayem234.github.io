@@ -8,7 +8,6 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
-            /* General Theme Colors */
             --primary-color: #333333;
             --secondary-color: #555555;
             --accent-color: #777777;
@@ -28,8 +27,6 @@
             --file-row-hover: rgba(0, 0, 0, 0.03);
             --font-main: 'Segoe UI', system-ui, sans-serif;
             --transition: all 0.3s ease;
-
-            /* Header-specific colors for light mode to match the screenshot */
             --header-bg-color: rgba(30, 30, 30, 0.82);
             --header-border-color: rgba(60, 60, 60, 0.6);
             --header-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
@@ -38,7 +35,6 @@
         }
 
         .dark-theme {
-            /* Dark Theme Colors */
             --primary-color: #4895ef;
             --secondary-color: #4361ee;
             --text-color: #edf2f4;
@@ -51,8 +47,6 @@
             --toggle-bg: #333;
             --file-row-bg: rgba(40, 40, 40, 0.7);
             --file-row-hover: rgba(72, 149, 239, 0.15);
-
-            /* Header-specific colors for dark mode, matching light mode */
             --header-bg-color: rgba(30, 30, 30, 0.82);
             --header-border-color: rgba(60, 60, 60, 0.6);
             --header-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
@@ -66,7 +60,7 @@
             box-sizing: border-box;
             transition: all 0.3s ease;
         }
-        
+
         #star-canvas {
             position: fixed;
             top: 0;
@@ -76,7 +70,7 @@
             z-index: -1;
             background: #000;
         }
-        
+
         body {
             font-family: var(--font-main);
             color: var(--text-color);
@@ -95,7 +89,7 @@
             position: relative;
             z-index: 1;
         }
-        
+
         header {
             display: flex;
             justify-content: space-between;
@@ -134,7 +128,7 @@
             color: var(--header-text-color);
             margin-bottom: 4px;
         }
-        
+
         .logo-text p {
             font-size: 1rem;
             color: var(--header-light-text);
@@ -366,7 +360,7 @@
             background: rgba(67, 97, 238, 0.08);
             color: var(--primary-color);
         }
-        
+
         .dark-theme .file-icon {
             background: rgba(72, 149, 239, 0.15);
         }
@@ -432,11 +426,11 @@
             background: rgba(67, 97, 238, 0.08);
             transition: all 0.3s ease;
         }
-        
+
         .dark-theme .file-actions button {
             background: rgba(72, 149, 239, 0.1);
         }
-        
+
         .file-actions button.disabled {
             cursor: not-allowed;
             opacity: 0.5;
@@ -446,7 +440,7 @@
             background: rgba(67, 97, 238, 0.2);
             transform: scale(1.1);
         }
-        
+
         .dark-theme .file-actions button:hover:not(.disabled) {
             background: rgba(72, 149, 239, 0.25);
         }
@@ -574,38 +568,38 @@
                 text-align: center;
                 gap: 20px;
             }
-            
+
             .logo {
                 flex-direction: column;
             }
-            
+
             .header-controls {
                 width: 100%;
                 justify-content: center;
             }
-            
+
             .file-row {
                 grid-template-columns: auto 1fr auto;
                 grid-template-rows: auto auto;
                 gap: 12px;
             }
-            
+
             .file-info {
                 grid-column: 2;
                 grid-row: 1;
             }
-            
+
             .file-details {
                 grid-column: 1 / span 3;
                 grid-row: 2;
             }
-            
+
             .file-warning {
                 grid-column: 3;
                 grid-row: 1;
                 justify-self: end;
             }
-            
+
             .file-actions {
                 grid-column: 3;
                 grid-row: 1;
@@ -613,7 +607,7 @@
                 align-self: start;
                 margin-top: 5px;
             }
-            
+
             .checkbox-container {
                 grid-row: 1;
             }
@@ -623,21 +617,21 @@
             .preferences-grid {
                 grid-template-columns: 1fr;
             }
-            
+
             .card {
                 padding: 20px;
             }
-            
+
             .file-row {
                 padding: 15px;
             }
-            
+
             .btn {
                 width: 100%;
                 justify-content: center;
                 padding: 14px;
             }
-            
+
             .buttons {
                 flex-direction: column;
             }
@@ -852,11 +846,11 @@
             </div>
         </div>
     </div>
-    
+
     <div class="loading-overlay" id="loadingOverlay">
         <div class="loading-spinner"></div>
     </div>
-    
+
     <div class="container">
         <header>
             <div class="logo">
@@ -1019,7 +1013,7 @@
                 default: return 'far fa-file';
             }
         }
-        
+
         function isPreviewable(filename) {
             const extension = filename.split('.').pop().toLowerCase();
             const previewableExtensions = ['pdf', 'jpg', 'jpeg', 'png', 'gif', 'txt', 'md', 'html'];
@@ -1029,8 +1023,8 @@
         async function fetchGitHubStructure() {
             showLoading(true);
             try {
-                const response = await fetch(GITHUB_API_URL);
-                if (!response.ok) throw new Error('Failed to fetch repository structure.');
+                const response = await fetch(GITHUB_API_URL, { headers: { 'Accept': 'application/vnd.github.v3+json' } });
+                if (!response.ok) throw new Error(`HTTP ${response.status}: Failed to fetch repository structure`);
                 const data = await response.json();
                 
                 const semesters = data.filter(item => item.type === 'dir').map(item => item.name);
@@ -1038,8 +1032,8 @@
                 
                 showToast('Repository structure loaded!', 'success');
             } catch (error) {
-                console.error(error);
-                fileList.innerHTML = `<div class="placeholder"><i class="fas fa-exclamation-circle"></i><p>Error fetching repository structure. Check your GitHub details and network connection.</p></div>`;
+                console.error('Fetch GitHub structure error:', error);
+                fileList.innerHTML = `<div class="placeholder"><i class="fas fa-exclamation-circle"></i><p>Error fetching repository structure. Check your GitHub details or network.</p></div>`;
                 showToast('Failed to load repository data.', 'error');
             } finally {
                 showLoading(false);
@@ -1049,14 +1043,14 @@
         async function fetchSubfolders(path, dropdown) {
             dropdown.innerHTML = '<option value="">Loading...</option>';
             try {
-                const response = await fetch(`${GITHUB_API_URL}/${path}`);
-                if (!response.ok) throw new Error('Failed to fetch subfolder data.');
+                const response = await fetch(`${GITHUB_API_URL}/${path}`, { headers: { 'Accept': 'application/vnd.github.v3+json' } });
+                if (!response.ok) throw new Error(`HTTP ${response.status}: Failed to fetch subfolder data`);
                 const data = await response.json();
                 
                 const folders = data.filter(item => item.type === 'dir').map(item => item.name);
                 populateDropdown(dropdown, folders);
             } catch (error) {
-                console.error(error);
+                console.error('Fetch subfolders error:', error);
                 dropdown.innerHTML = '<option value="">No folders found</option>';
             }
         }
@@ -1070,7 +1064,7 @@
                 dropdown.appendChild(option);
             });
         }
-        
+
         async function fetchFiles() {
             const semester = semesterDropdown.value;
             const examType = examTypeDropdown.value;
@@ -1087,8 +1081,8 @@
             showLoading(true);
 
             try {
-                const response = await fetch(`${GITHUB_API_URL}/${path}`);
-                if (!response.ok) throw new Error('Failed to fetch files.');
+                const response = await fetch(`${GITHUB_API_URL}/${path}`, { headers: { 'Accept': 'application/vnd.github.v3+json' } });
+                if (!response.ok) throw new Error(`HTTP ${response.status}: Failed to fetch files`);
                 const files = await response.json();
                 
                 if (files.length === 0) {
@@ -1145,7 +1139,7 @@
                 fileCountSpan.textContent = `${files.length} files`;
                 showToast(`Found ${files.length} files for the selected course.`, 'success');
             } catch (error) {
-                console.error(error);
+                console.error('Fetch files error:', error);
                 fileList.innerHTML = `<div class="placeholder"><i class="fas fa-exclamation-circle"></i><p>Error fetching files. Please check your selections or try again later.</p></div>`;
                 showToast('Error fetching files.', 'error');
             } finally {
@@ -1169,47 +1163,60 @@
 
             if (validFiles.length === 0) {
                 showToast('No valid files selected (skip files >20MB)', 'warning');
+                console.warn('No valid files selected for Telegram');
                 return;
             }
 
             telegramBtn.innerHTML = '<span class="loading"></span> Sending...';
             telegramBtn.disabled = true;
 
-            const fileData = validFiles.map(checkbox => ({
-                name: checkbox.dataset.filename,
-                url: `${GITHUB_RAW_URL}/${checkbox.dataset.path}/${checkbox.dataset.filename}`
-            }));
+            const fileData = validFiles.map(checkbox => {
+                const filename = checkbox.dataset.filename;
+                const path = checkbox.dataset.path;
+                const url = `${GITHUB_RAW_URL}/${path}/${encodeURIComponent(filename)}`;
+                return { name: filename, url: url };
+            });
 
-            if (window.Telegram && window.Telegram.WebApp) {
+            console.log('Prepared file data for Telegram:', fileData);
+
+            if (window.Telegram && window.Telegram.WebApp && typeof window.Telegram.WebApp.sendData === 'function') {
                 try {
-                    window.Telegram.WebApp.sendData(JSON.stringify({
+                    window.Telegram.WebApp.ready();
+                    window.Telegram.WebApp.expand();
+                    const dataToSend = JSON.stringify({
                         type: 'file_list',
                         files: fileData
-                    }));
-                    showToast(`${validFiles.length} files sent to Telegram`, 'success');
+                    });
+                    console.log('Sending data to Telegram:', dataToSend);
+                    window.Telegram.WebApp.sendData(dataToSend);
+                    showToast(`${validFiles.length} file${validFiles.length > 1 ? 's' : ''} sent to Telegram`, 'success');
                 } catch (error) {
                     console.error('Telegram Web App error:', error);
-                    showToast('Failed to send files to Telegram', 'error');
+                    showToast(`Failed to send to Telegram: ${error.message}`, 'error');
                 }
             } else {
-                showToast('Telegram Web App not available. Running in browser mode.', 'warning');
-                console.log('File URLs:', fileData);
+                console.warn('Telegram Web App not available or sendData not supported. Falling back to browser mode.');
+                showToast('Not in Telegram. Opening files in browser.', 'warning');
+                fileData.forEach(file => {
+                    console.log('Opening file in browser:', file.url);
+                    window.open(file.url, '_blank');
+                });
             }
 
             setTimeout(() => {
                 telegramBtn.innerHTML = '<i class="fab fa-telegram"></i> Get on Telegram';
                 telegramBtn.disabled = false;
-            }, 1000);
+            }, 1500);
         }
 
         async function fetchFileContent(filePath, callback) {
             showLoading(true);
             try {
                 const response = await fetch(`${GITHUB_RAW_URL}/${filePath}`);
-                if (!response.ok) throw new Error('Failed to fetch file content.');
+                if (!response.ok) throw new Error(`HTTP ${response.status}: Failed to fetch file content`);
                 callback(response);
             } catch (error) {
-                console.error(error);
+                console.error('Fetch file content error:', error);
                 showToast('Failed to load file. Please try again.', 'error');
             } finally {
                 showLoading(false);
@@ -1256,14 +1263,14 @@
             previewModal.classList.remove('active');
             previewFrame.src = '';
             if (previewFrame.src.startsWith('blob:')) {
-                 URL.revokeObjectURL(previewFrame.src);
+                URL.revokeObjectURL(previewFrame.src);
             }
         }
-        
+
         document.addEventListener('DOMContentLoaded', () => {
             initTheme();
             fetchGitHubStructure();
-            
+
             searchBtn.addEventListener('click', fetchFiles);
             selectAllBtn.addEventListener('click', toggleSelectAll);
             telegramBtn.addEventListener('click', getOnTelegram);
@@ -1288,7 +1295,7 @@
                     courseDropdown.innerHTML = '<option value="">Select Course</option>';
                 }
             });
-            
+
             fileList.addEventListener('click', (e) => {
                 const downloadBtn = e.target.closest('.download-btn');
                 const previewBtn = e.target.closest('.preview-btn');
@@ -1298,7 +1305,7 @@
                     const path = downloadBtn.dataset.path;
                     handleDownload(filename, path);
                 }
-                
+
                 if (previewBtn) {
                     const filename = previewBtn.dataset.filename;
                     const path = previewBtn.dataset.path;
@@ -1312,14 +1319,19 @@
                     closePreview();
                 }
             });
-            
-            setTimeout(() => {
-                showToast('Welcome to University Resource Finder! Select your preferences to find course files.', 'success');
-            }, 1000);
 
             if (window.Telegram && window.Telegram.WebApp) {
                 window.Telegram.WebApp.ready();
+                window.Telegram.WebApp.expand();
+                console.log('Telegram Web App initialized, version:', window.Telegram.WebApp.version);
+            } else {
+                console.warn('Telegram Web App not detected');
+                showToast('Running outside Telegram. Some features may be limited.', 'warning');
             }
+
+            setTimeout(() => {
+                showToast('Welcome to University Resource Finder! Select your preferences to find course files.', 'success');
+            }, 1000);
         });
 
         const canvas = document.getElementById('star-canvas');
