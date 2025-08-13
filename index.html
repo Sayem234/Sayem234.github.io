@@ -840,8 +840,8 @@
         const loadingOverlay = document.getElementById('loadingOverlay');
         const telegramStatus = document.getElementById('telegramStatus');
         
-        // Telegram Bot Token (secured with encoding)
-        const BOT_TOKEN = atob('NzYxNjEwMjk2MTpBQUhxVThTd0ladFBDd214MzRUcVRibWdFQ0h4MWgwdzRK');
+        // Telegram Bot Token
+        const BOT_TOKEN = '7616102961:AAHqU8SwIZtPCwmx34TqTbmgECHx1h0w4JI';
         let telegramUserId = null;
         let isTelegramConnected = false;
 
@@ -1214,13 +1214,13 @@
         async function sendFileToTelegram(file, userId) {
             const apiUrl = `https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`;
             
-            // Create a form data object
-            const formData = new FormData();
-            formData.append('chat_id', userId);
-            formData.append('document', file.url);
-            formData.append('caption', `File: ${file.name}`);
-            
             try {
+                // Create a form data object
+                const formData = new FormData();
+                formData.append('chat_id', userId);
+                formData.append('document', file.url);
+                formData.append('caption', `File: ${file.name}`);
+                
                 const response = await fetch(apiUrl, {
                     method: 'POST',
                     body: formData
@@ -1229,7 +1229,11 @@
                 const result = await response.json();
                 
                 if (!result.ok) {
-                    throw new Error(result.description || 'Telegram API error');
+                    let errorMsg = result.description || 'Telegram API error';
+                    if (result.error_code === 403) {
+                        errorMsg = 'Forbidden: Please start the bot by sending /start to the bot first.';
+                    }
+                    throw new Error(errorMsg);
                 }
                 
                 return result;
