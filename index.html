@@ -66,6 +66,19 @@
             background-size: 400% 400%;
             animation: gradientBG 15s ease infinite;
             line-height: 1.6;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Particle background animation */
+        #particle-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
         }
 
         @keyframes gradientBG {
@@ -77,6 +90,8 @@
         .container {
             max-width: 1200px;
             margin: 0 auto;
+            position: relative;
+            z-index: 1;
         }
 
         /* Professional Header */
@@ -724,6 +739,8 @@
     </style>
 </head>
 <body>
+    <canvas id="particle-canvas"></canvas>
+    
     <div class="loading-overlay" id="loadingOverlay">
         <div class="loading-spinner"></div>
     </div>
@@ -826,6 +843,101 @@
     <div class="toast-container" id="toastContainer"></div>
 
     <script>
+        // =========================================
+        // Particle Background Animation
+        // =========================================
+        (function() {
+            const canvas = document.getElementById('particle-canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Set canvas dimensions
+            function resizeCanvas() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+            
+            window.addEventListener('resize', resizeCanvas);
+            resizeCanvas();
+            
+            // Particle class
+            class Particle {
+                constructor() {
+                    this.reset();
+                }
+                
+                reset() {
+                    this.x = Math.random() * canvas.width;
+                    this.y = Math.random() * canvas.height;
+                    this.size = Math.random() * 1.5 + 0.5;
+                    this.speedX = Math.random() * 0.4 - 0.2;
+                    this.speedY = Math.random() * 0.4 - 0.2;
+                    this.opacity = Math.random() * 0.4 + 0.1;
+                    this.color = `rgba(255, 255, 255, ${this.opacity})`;
+                }
+                
+                update() {
+                    this.x += this.speedX;
+                    this.y += this.speedY;
+                    
+                    // Reset particle if it goes off screen
+                    if (this.x < 0 || this.x > canvas.width || 
+                        this.y < 0 || this.y > canvas.height) {
+                        this.reset();
+                    }
+                }
+                
+                draw() {
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.fillStyle = this.color;
+                    ctx.fill();
+                }
+            }
+            
+            // Create particles
+            const particles = [];
+            const particleCount = Math.min(80, Math.floor(window.innerWidth / 15));
+            
+            for (let i = 0; i < particleCount; i++) {
+                particles.push(new Particle());
+            }
+            
+            // Animation loop
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // Draw particles
+                for (let i = 0; i < particles.length; i++) {
+                    particles[i].update();
+                    particles[i].draw();
+                    
+                    // Connect particles with lines
+                    for (let j = i; j < particles.length; j++) {
+                        const dx = particles[i].x - particles[j].x;
+                        const dy = particles[i].y - particles[j].y;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        
+                        if (distance < 120) {
+                            ctx.beginPath();
+                            ctx.strokeStyle = `rgba(255, 255, 255, ${0.04 * (1 - distance/120)})`;
+                            ctx.lineWidth = 0.3;
+                            ctx.moveTo(particles[i].x, particles[i].y);
+                            ctx.lineTo(particles[j].x, particles[j].y);
+                            ctx.stroke();
+                        }
+                    }
+                }
+                
+                requestAnimationFrame(animate);
+            }
+            
+            // Start animation
+            animate();
+        })();
+
+        // =========================================
+        // Application Functionality
+        // =========================================
         // DOM Elements
         const themeToggle = document.getElementById('themeToggle');
         const semesterSelect = document.getElementById('semester');
@@ -1034,6 +1146,9 @@
                 const fileType = getFileType(file.name);
                 const iconClass = getFileIconClass(fileType);
                 
+                // Hide preview and download for Telegram users
+                const showActions = !isTelegramConnected;
+                
                 const fileRow = document.createElement('div');
                 fileRow.className = 'file-row';
                 fileRow.innerHTML = `
@@ -1050,6 +1165,7 @@
                         </div>
                     </div>
                     ${isLarge ? '<div class="file-warning"><i class="fas fa-exclamation-triangle"></i> Large file</div>' : ''}
+                    ${showActions ? `
                     <div class="file-actions">
                         <a href="${fileUrl}" class="download-btn" title="Download" download>
                             <i class="fas fa-download"></i>
@@ -1058,6 +1174,7 @@
                             <i class="fas fa-eye"></i>
                         </a>
                     </div>
+                    ` : ''}
                 `;
                 
                 fileList.appendChild(fileRow);
@@ -1180,7 +1297,7 @@
                 const row = checkbox.closest('.file-row');
                 return {
                     name: row.querySelector('.file-name').textContent,
-                    url: row.querySelector('.download-btn').href
+                    url: row.querySelector('.download-btn')?.href || ''
                 };
             });
             
