@@ -769,6 +769,52 @@
             height: 100%;
             border: none;
         }
+        .retry-section {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .retry-btn {
+            background: var(--warning-color);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .retry-btn:hover {
+            background: #e68a00;
+        }
+        .debug-info {
+            margin-top: 15px;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 0.85rem;
+            text-align: left;
+            max-height: 150px;
+            overflow-y: auto;
+            color: var(--danger-color);
+        }
+        .auth-warning {
+            margin-top: 15px;
+            padding: 15px;
+            background: rgba(255, 159, 28, 0.1);
+            border-left: 4px solid var(--warning-color);
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+        .auth-warning h4 {
+            color: var(--warning-color);
+            margin-bottom: 8px;
+        }
+        .auth-warning p {
+            margin-bottom: 5px;
+        }
     </style>
 </head>
 <body>
@@ -849,7 +895,7 @@
                 <div class="file-list" id="fileList">
                     <div class="placeholder">
                         <i class="fas fa-database"></i>
-                        <p>Select semester, exam type and course to view available resources</p>
+                        <p id="placeholderText">Loading repository structure...</p>
                         
                         <div class="stats">
                             <div class="stat-box">
@@ -864,6 +910,26 @@
                                 <div class="stat-value">8</div>
                                 <div class="stat-label">Semesters</div>
                             </div>
+                        </div>
+                        
+                        <div class="retry-section" id="retrySection" style="display: none;">
+                            <button class="retry-btn" id="retryBtn">
+                                <i class="fas fa-redo"></i> Retry Loading
+                            </button>
+                        </div>
+                        
+                        <div class="debug-info" id="debugInfo" style="display: none;">
+                            <strong>Debug Information:</strong>
+                            <div id="debugContent"></div>
+                        </div>
+                        
+                        <div class="auth-warning" id="authWarning" style="display: none;">
+                            <h4><i class="fas fa-exclamation-triangle"></i> GitHub Authentication Issue</h4>
+                            <p>The application is running without GitHub authentication.</p>
+                            <p>This may cause rate limiting issues with frequent use.</p>
+                            <p><strong>To fix this:</strong></p>
+                            <p>1. Create a GitHub Personal Access Token with 'repo' scope</p>
+                            <p>2. Update the GITHUB_TOKEN variable in the code</p>
                         </div>
                     </div>
                 </div>
@@ -929,15 +995,30 @@
         const previewModal = document.getElementById('previewModal');
         const closePreview = document.getElementById('closePreview');
         const previewIframe = document.getElementById('previewIframe');
+        const placeholderText = document.getElementById('placeholderText');
+        const retrySection = document.getElementById('retrySection');
+        const retryBtn = document.getElementById('retryBtn');
+        const debugInfo = document.getElementById('debugInfo');
+        const debugContent = document.getElementById('debugContent');
+        const authWarning = document.getElementById('authWarning');
         
-        // Telegram Bot Token
-        const BOT_TOKEN = '7616102961:AAHqU8SwIZtPCwmx34TqTbmgECHx1h0w4JI'; // Replace with your actual bot token
-        // GitHub Personal Access Token (optional, for private repos or higher rate limits)
-        const GITHUB_TOKEN = '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';
-        // Replace with your GitHub token or leave empty for public repos
+        // Configuration
+        const REPO_OWNER = '11UCRES';
+        const REPO_NAME = 'cse';
+        const BOT_TOKEN = '7954499196:AAF7YiojzLccNyFe-wHDBueJMLVnal-9WhM'; // Replace with your actual bot token
+        const GITHUB_TOKEN = ''; // Leave empty for public repos or add your token
         let telegramUserId = null;
         let isTelegramConnected = false;
         let selectedFiles = [];
+        let useAuth = false;
+        
+        // Debug logging function
+        function debugLog(message) {
+            console.log(`[DEBUG] ${message}`);
+            if (debugContent) {
+                debugContent.innerHTML += `<div>${new Date().toLocaleTimeString()}: ${message}</div>`;
+            }
+        }
         
         // Helper function to get MIME type based on file extension
         function getMimeType(filename) {
@@ -1029,24 +1110,146 @@
             // Update badge
             updateSelectedCount();
         }
-        // Fetch folder structure from GitHub
-        async function fetchGitHubStructure() {
-            showLoading(true);
-            try {
-                const headers = GITHUB_TOKEN ? { 'Authorization': `token ${GITHUB_TOKEN}` } : {};
-                const response = await fetch('https://api.github.com/repos/11UCRES/cse/contents/', { headers });
-                if (!response.ok) {
+        
+        // Enhanced GitHub API request function with fallback authentication
+        async function fetchGitHubAPI(endpoint, useAuthFirst = true) {
+            const url = `https://api.github.com${endpoint}`;
+            const headers = {
+                'Accept': 'application/vnd.github.v3+json'
+            };
+            
+            // Try with authentication first if requested and token is available
+            if (useAuthFirst && GITHUB_TOKEN) {
+                headers['Authorization'] = `token ${GITHUB_TOKEN}`;
+                debugLog(`Trying authenticated request to: ${url}`);
+                
+                try {
+                    const response = await fetch(url, { headers });
+                    debugLog(`Auth response status: ${response.status} ${response.statusText}`);
+                    
+                    // Handle rate limiting
                     if (response.status === 403) {
-                        throw new Error('GitHub API rate limit exceeded or access forbidden. Please add a GitHub token.');
+                        const rateLimitRemaining = response.headers.get('X-RateLimit-Remaining');
+                        const rateLimitReset = response.headers.get('X-RateLimit-Reset');
+                        
+                        debugLog(`Rate limit remaining: ${rateLimitRemaining}`);
+                        debugLog(`Rate limit reset: ${new Date(parseInt(rateLimitReset) * 1000).toLocaleString()}`);
+                        
+                        if (rateLimitRemaining === '0') {
+                            const resetTime = new Date(parseInt(rateLimitReset) * 1000);
+                            throw new Error(`GitHub API rate limit exceeded. Try again after ${resetTime.toLocaleTimeString()}`);
+                        }
                     }
-                    throw new Error('Failed to fetch repository structure');
+                    
+                    // Handle bad credentials
+                    if (response.status === 401) {
+                        debugLog(`Bad credentials, falling back to unauthenticated request`);
+                        return fetchGitHubAPI(endpoint, false);
+                    }
+                    
+                    if (!response.ok) {
+                        let errorData;
+                        try {
+                            errorData = await response.json();
+                            debugLog(`Error response: ${JSON.stringify(errorData)}`);
+                        } catch (e) {
+                            debugLog(`Failed to parse error response: ${e.message}`);
+                            errorData = { message: response.statusText };
+                        }
+                        throw new Error(errorData.message || `GitHub API error: ${response.status} ${response.statusText}`);
+                    }
+                    
+                    const data = await response.json();
+                    debugLog(`Successfully fetched data with auth: ${Array.isArray(data) ? `${data.length} items` : 'object'}`);
+                    useAuth = true;
+                    return data;
+                } catch (error) {
+                    if (error.message.includes('Bad credentials')) {
+                        debugLog(`Authentication failed, falling back to unauthenticated request`);
+                        return fetchGitHubAPI(endpoint, false);
+                    }
+                    throw error;
+                }
+            }
+            
+            // Try without authentication
+            debugLog(`Trying unauthenticated request to: ${url}`);
+            delete headers['Authorization'];
+            
+            try {
+                const response = await fetch(url, { headers });
+                debugLog(`No-auth response status: ${response.status} ${response.statusText}`);
+                
+                // Handle rate limiting
+                if (response.status === 403) {
+                    const rateLimitRemaining = response.headers.get('X-RateLimit-Remaining');
+                    const rateLimitReset = response.headers.get('X-RateLimit-Reset');
+                    
+                    debugLog(`Rate limit remaining: ${rateLimitRemaining}`);
+                    debugLog(`Rate limit reset: ${new Date(parseInt(rateLimitReset) * 1000).toLocaleString()}`);
+                    
+                    if (rateLimitRemaining === '0') {
+                        const resetTime = new Date(parseInt(rateLimitReset) * 1000);
+                        throw new Error(`GitHub API rate limit exceeded. Try again after ${resetTime.toLocaleTimeString()}`);
+                    }
+                }
+                
+                if (!response.ok) {
+                    let errorData;
+                    try {
+                        errorData = await response.json();
+                        debugLog(`Error response: ${JSON.stringify(errorData)}`);
+                    } catch (e) {
+                        debugLog(`Failed to parse error response: ${e.message}`);
+                        errorData = { message: response.statusText };
+                    }
+                    throw new Error(errorData.message || `GitHub API error: ${response.status} ${response.statusText}`);
                 }
                 
                 const data = await response.json();
+                debugLog(`Successfully fetched data without auth: ${Array.isArray(data) ? `${data.length} items` : 'object'}`);
+                useAuth = false;
+                return data;
+            } catch (error) {
+                debugLog(`Fetch error: ${error.message}`);
+                throw error;
+            }
+        }
+        
+        // Fetch folder structure from GitHub with better error handling
+        async function fetchGitHubStructure() {
+            showLoading(true);
+            placeholderText.textContent = 'Loading repository structure...';
+            retrySection.style.display = 'none';
+            debugInfo.style.display = 'none';
+            authWarning.style.display = 'none';
+            debugContent.innerHTML = '';
+            
+            try {
+                debugLog(`Starting to fetch repository structure for ${REPO_OWNER}/${REPO_NAME}`);
+                
+                // First check if repository exists
+                debugLog(`Checking if repository exists...`);
+                const repoData = await fetchGitHubAPI(`/repos/${REPO_OWNER}/${REPO_NAME}`);
+                debugLog(`Repository exists: ${repoData.name}, private: ${repoData.private}`);
+                
+                // Then fetch repository contents
+                debugLog(`Fetching repository contents...`);
+                const data = await fetchGitHubAPI(`/repos/${REPO_OWNER}/${REPO_NAME}/contents/`);
                 
                 // Extract semesters (top-level folders)
                 const semesters = data.filter(item => item.type === 'dir').map(item => item.name);
+                debugLog(`Found semesters: ${semesters.join(', ')}`);
                 populateSelect(semesterSelect, semesters);
+                
+                // Show auth warning if not using authentication
+                if (!useAuth && GITHUB_TOKEN) {
+                    authWarning.style.display = 'block';
+                    debugLog(`Authentication failed, running without GitHub token`);
+                } else if (!useAuth && !GITHUB_TOKEN) {
+                    authWarning.style.display = 'block';
+                    debugLog(`No GitHub token provided, running without authentication`);
+                }
                 
                 // When semester is selected, fetch exam types
                 semesterSelect.addEventListener('change', async () => {
@@ -1055,16 +1258,16 @@
                     showLoading(true);
                     try {
                         const semesterPath = `${semesterSelect.value}/`;
-                        const examResponse = await fetch(`https://api.github.com/repos/11UCRES/cse/contents/${semesterPath}`, { headers });
-                        if (!examResponse.ok) throw new Error('Failed to fetch exam types');
-                        
-                        const examData = await examResponse.json();
+                        debugLog(`Fetching exam types for semester: ${semesterSelect.value}`);
+                        const examData = await fetchGitHubAPI(`/repos/${REPO_OWNER}/${REPO_NAME}/contents/${semesterPath}`);
                         const examTypes = examData.filter(item => item.type === 'dir').map(item => item.name);
+                        debugLog(`Found exam types: ${examTypes.join(', ')}`);
                         populateSelect(examTypeSelect, examTypes);
                         // Reset course dropdown
                         courseSelect.innerHTML = '<option value="">Select Course</option>';
                     } catch (error) {
-                        showToast(`Error: ${error.message}`, 'error');
+                        debugLog(`Error fetching exam types: ${error.message}`);
+                        showToast(`Error fetching exam types: ${error.message}`, 'error');
                     } finally {
                         showLoading(false);
                     }
@@ -1077,26 +1280,43 @@
                     showLoading(true);
                     try {
                         const coursePath = `${semesterSelect.value}/${examTypeSelect.value}/`;
-                        const courseResponse = await fetch(`https://api.github.com/repos/11UCRES/cse/contents/${coursePath}`, { headers });
-                        if (!courseResponse.ok) throw new Error('Failed to fetch courses');
-                        
-                        const courseData = await courseResponse.json();
+                        debugLog(`Fetching courses for ${coursePath}`);
+                        const courseData = await fetchGitHubAPI(`/repos/${REPO_OWNER}/${REPO_NAME}/contents/${coursePath}`);
                         const courses = courseData.filter(item => item.type === 'dir').map(item => item.name);
+                        debugLog(`Found courses: ${courses.join(', ')}`);
                         populateSelect(courseSelect, courses);
                     } catch (error) {
-                        showToast(`Error: ${error.message}`, 'error');
+                        debugLog(`Error fetching courses: ${error.message}`);
+                        showToast(`Error fetching courses: ${error.message}`, 'error');
                     } finally {
                         showLoading(false);
                     }
                 });
                 
                 showToast('Repository structure loaded successfully', 'success');
+                placeholderText.textContent = 'Select semester, exam type and course to view available resources';
             } catch (error) {
-                showToast(`Error: ${error.message}`, 'error');
+                console.error('Failed to fetch repository structure:', error);
+                debugLog(`Failed to fetch repository structure: ${error.message}`);
+                showToast(`Failed to load repository: ${error.message}`, 'error');
+                placeholderText.textContent = `Failed to load repository: ${error.message}`;
+                retrySection.style.display = 'block';
+                debugInfo.style.display = 'block';
+                
+                // Show auth warning if there was an authentication error
+                if (error.message.includes('Bad credentials') || error.message.includes('401')) {
+                    authWarning.style.display = 'block';
+                }
             } finally {
                 showLoading(false);
             }
         }
+        
+        // Retry button handler
+        retryBtn.addEventListener('click', () => {
+            fetchGitHubStructure();
+        });
+        
         // Populate a select dropdown with options
         function populateSelect(selectElement, options) {
             while (selectElement.options.length > 1) {
@@ -1120,18 +1340,17 @@
             showLoading(true);
             try {
                 const path = `${semesterSelect.value}/${examTypeSelect.value}/${courseSelect.value}/`;
-                const headers = GITHUB_TOKEN ? { 'Authorization': `token ${GITHUB_TOKEN}` } : {};
-                const response = await fetch(`https://api.github.com/repos/11UCRES/cse/contents/${path}`, { headers });
-                if (!response.ok) throw new Error('Failed to fetch files');
-                
-                const data = await response.json();
+                debugLog(`Fetching files for path: ${path}`);
+                const data = await fetchGitHubAPI(`/repos/${REPO_OWNER}/${REPO_NAME}/contents/${path}`);
                 const files = data.filter(item => item.type === 'file');
+                debugLog(`Found ${files.length} files`);
                 
                 displayFiles(files, path);
                 
                 showToast(`Found ${files.length} resources`, 'success');
                 
             } catch (error) {
+                debugLog(`Error fetching files: ${error.message}`);
                 showToast(`Error: ${error.message}`, 'error');
             } finally {
                 showLoading(false);
@@ -1153,7 +1372,7 @@
             files.forEach(file => {
                 const isLarge = file.size > 20 * 1024 * 1024; // 20MB
                 const fileSize = formatFileSize(file.size);
-                const fileUrl = `https://raw.githubusercontent.com/11UCRES/cse/main/${path}${encodeURIComponent(file.name)}`;
+                const fileUrl = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/main/${path}${encodeURIComponent(file.name)}`;
                 
                 const fileType = getFileType(file.name);
                 const iconClass = getFileIconClass(fileType);
@@ -1357,6 +1576,7 @@
             const apiUrl = `https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`;
             
             try {
+                debugLog(`Downloading file: ${file.name}`);
                 const response = await fetch(file.url);
                 if (!response.ok) throw new Error(`Failed to download file: ${response.status}`);
                 
@@ -1364,6 +1584,7 @@
                 const mimeType = getMimeType(file.name);
                 const fileObj = new File([blob], file.name, { type: mimeType });
                 
+                debugLog(`Sending file to Telegram: ${file.name}`);
                 const formData = new FormData();
                 formData.append('chat_id', userId);
                 formData.append('document', fileObj, file.name);
@@ -1381,12 +1602,14 @@
                     if (result.error_code === 403) {
                         errorMsg = 'Forbidden: Please start the bot by sending /start to the bot first.';
                     }
+                    debugLog(`Telegram API error: ${errorMsg}`);
                     throw new Error(errorMsg);
                 }
                 
+                debugLog(`Successfully sent file: ${file.name}`);
                 return result;
             } catch (error) {
-                console.error(`Error sending ${file.name}:`, error);
+                debugLog(`Error sending ${file.name}: ${error.message}`);
                 throw new Error(`Failed to send ${file.name}: ${error.message}`);
             }
         }
@@ -1423,6 +1646,8 @@
                 let succeeded = 0;
                 let failed = 0;
                 const totalFiles = filesToSend.length;
+                
+                debugLog(`Starting to send ${totalFiles} files to Telegram`);
                 
                 // Create a progress toast
                 const progressToast = document.createElement('div');
@@ -1471,6 +1696,8 @@
                 // Remove progress toast
                 progressToast.remove();
                 
+                debugLog(`Finished sending files. Succeeded: ${succeeded}, Failed: ${failed}`);
+                
                 if (failed > 0) {
                     showToast(`${succeeded} files sent, ${failed} failed`, 'warning');
                 } else {
@@ -1514,6 +1741,7 @@
                     const fileUrl = checkbox.dataset.url;
                     
                     try {
+                        debugLog(`Downloading file for ZIP: ${fileName}`);
                         const response = await fetch(fileUrl);
                         if (!response.ok) throw new Error(`Failed to download ${fileName}`);
                         
@@ -1525,6 +1753,7 @@
                     }
                 }
                 
+                debugLog(`Creating ZIP file with ${validFiles.length} files`);
                 const content = await zip.generateAsync({type: "blob"});
                 
                 const url = URL.createObjectURL(content);
@@ -1553,6 +1782,7 @@
         
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
+            debugLog('Application initialized');
             initTheme();
             initTelegram();
             fetchGitHubStructure();
