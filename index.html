@@ -815,6 +815,30 @@
         .auth-warning p {
             margin-bottom: 5px;
         }
+        
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: var(--primary-color);
+            transition: width 0.3s ease;
+            border-radius: 3px;
+        }
+        
+        .transfer-stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            margin-top: 8px;
+            opacity: 0.8;
+        }
     </style>
 </head>
 <body>
@@ -1005,12 +1029,28 @@
         // Configuration
         const REPO_OWNER = '11UCRES';
         const REPO_NAME = 'cse';
-        const BOT_TOKEN = '7616102961:AAHqU8SwIZtPCwmx34TqTbmgECHx1h0w4JI'; // Replace with your actual bot token
-        const GITHUB_TOKEN = ''; // Leave empty for public repos or add your token
+        const BOT_TOKEN = '7954499196:AAF7YiojzLccNyFe-wHDBueJMLVnal-9WhM';
+        const GITHUB_TOKEN = '';
         let telegramUserId = null;
         let isTelegramConnected = false;
         let selectedFiles = [];
         let useAuth = false;
+        
+        // Performance optimizations
+        const MAX_CONCURRENT_TRANSFERS = 10; // Increased from 3
+        const REQUEST_TIMEOUT = 15000; // 15 seconds timeout
+        const CHUNK_SIZE = 1024 * 1024; // 1MB chunks for large files
+        const RETRY_ATTEMPTS = 2;
+        
+        // Transfer statistics
+        let transferStats = {
+            startTime: 0,
+            totalFiles: 0,
+            completedFiles: 0,
+            totalBytes: 0,
+            transferredBytes: 0,
+            errors: []
+        };
         
         // Debug logging function
         function debugLog(message) {
@@ -1043,6 +1083,27 @@
             return mimeTypes[ext] || 'application/octet-stream';
         }
         
+        // Enhanced fetch with timeout and retry
+        async function fetchWithTimeout(url, options = {}, timeout = REQUEST_TIMEOUT) {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), timeout);
+            
+            try {
+                const response = await fetch(url, {
+                    ...options,
+                    signal: controller.signal
+                });
+                clearTimeout(timeoutId);
+                return response;
+            } catch (error) {
+                clearTimeout(timeoutId);
+                if (error.name === 'AbortError') {
+                    throw new Error('Request timeout');
+                }
+                throw error;
+            }
+        }
+        
         // Theme Management
         function initTheme() {
             const savedTheme = localStorage.getItem('theme') || 'light';
@@ -1055,10 +1116,12 @@
             const isDark = document.documentElement.classList.contains('dark-theme');
             localStorage.setItem('theme', isDark ? 'dark' : 'light');
         });
+        
         // Show/hide loading overlay
         function showLoading(show) {
             loadingOverlay.classList.toggle('active', show);
         }
+        
         // Handle exam type changes
         examTypeSelect.addEventListener('change', function() {
             if (this.value === 'previousquestion') {
@@ -1069,6 +1132,7 @@
                 courseSelect.querySelector('option[value=""]').textContent = 'Select Course';
             }
         });
+        
         // Initialize Telegram Web App
         function initTelegram() {
             try {
@@ -1092,9 +1156,9 @@
                 telegramStatusText.textContent = 'Telegram: Connection failed';
             }
             
-            // Update UI based on Telegram connection
             updateActionButton();
         }
+        
         // Update action button based on context
         function updateActionButton() {
             if (isTelegramConnected) {
@@ -1107,7 +1171,6 @@
                 actionBtn.classList.remove('btn-telegram');
             }
             
-            // Update badge
             updateSelectedCount();
         }
         
@@ -1118,16 +1181,14 @@
                 'Accept': 'application/vnd.github.v3+json'
             };
             
-            // Try with authentication first if requested and token is available
             if (useAuthFirst && GITHUB_TOKEN) {
                 headers['Authorization'] = `token ${GITHUB_TOKEN}`;
                 debugLog(`Trying authenticated request to: ${url}`);
                 
                 try {
-                    const response = await fetch(url, { headers });
+                    const response = await fetchWithTimeout(url, { headers });
                     debugLog(`Auth response status: ${response.status} ${response.statusText}`);
                     
-                    // Handle rate limiting
                     if (response.status === 403) {
                         const rateLimitRemaining = response.headers.get('X-RateLimit-Remaining');
                         const rateLimitReset = response.headers.get('X-RateLimit-Reset');
@@ -1141,7 +1202,6 @@
                         }
                     }
                     
-                    // Handle bad credentials
                     if (response.status === 401) {
                         debugLog(`Bad credentials, falling back to unauthenticated request`);
                         return fetchGitHubAPI(endpoint, false);
@@ -1172,15 +1232,13 @@
                 }
             }
             
-            // Try without authentication
             debugLog(`Trying unauthenticated request to: ${url}`);
             delete headers['Authorization'];
             
             try {
-                const response = await fetch(url, { headers });
+                const response = await fetchWithTimeout(url, { headers });
                 debugLog(`No-auth response status: ${response.status} ${response.statusText}`);
                 
-                // Handle rate limiting
                 if (response.status === 403) {
                     const rateLimitRemaining = response.headers.get('X-RateLimit-Remaining');
                     const rateLimitReset = response.headers.get('X-RateLimit-Reset');
@@ -1228,21 +1286,17 @@
             try {
                 debugLog(`Starting to fetch repository structure for ${REPO_OWNER}/${REPO_NAME}`);
                 
-                // First check if repository exists
                 debugLog(`Checking if repository exists...`);
                 const repoData = await fetchGitHubAPI(`/repos/${REPO_OWNER}/${REPO_NAME}`);
                 debugLog(`Repository exists: ${repoData.name}, private: ${repoData.private}`);
                 
-                // Then fetch repository contents
                 debugLog(`Fetching repository contents...`);
                 const data = await fetchGitHubAPI(`/repos/${REPO_OWNER}/${REPO_NAME}/contents/`);
                 
-                // Extract semesters (top-level folders)
                 const semesters = data.filter(item => item.type === 'dir').map(item => item.name);
                 debugLog(`Found semesters: ${semesters.join(', ')}`);
                 populateSelect(semesterSelect, semesters);
                 
-                // Show auth warning if not using authentication
                 if (!useAuth && GITHUB_TOKEN) {
                     authWarning.style.display = 'block';
                     debugLog(`Authentication failed, running without GitHub token`);
@@ -1251,7 +1305,6 @@
                     debugLog(`No GitHub token provided, running without authentication`);
                 }
                 
-                // When semester is selected, fetch exam types
                 semesterSelect.addEventListener('change', async () => {
                     if (!semesterSelect.value) return;
                     
@@ -1263,7 +1316,6 @@
                         const examTypes = examData.filter(item => item.type === 'dir').map(item => item.name);
                         debugLog(`Found exam types: ${examTypes.join(', ')}`);
                         populateSelect(examTypeSelect, examTypes);
-                        // Reset course dropdown
                         courseSelect.innerHTML = '<option value="">Select Course</option>';
                     } catch (error) {
                         debugLog(`Error fetching exam types: ${error.message}`);
@@ -1273,7 +1325,6 @@
                     }
                 });
                 
-                // When exam type is selected, fetch courses
                 examTypeSelect.addEventListener('change', async () => {
                     if (!semesterSelect.value || !examTypeSelect.value) return;
                     
@@ -1303,7 +1354,6 @@
                 retrySection.style.display = 'block';
                 debugInfo.style.display = 'block';
                 
-                // Show auth warning if there was an authentication error
                 if (error.message.includes('Bad credentials') || error.message.includes('401')) {
                     authWarning.style.display = 'block';
                 }
@@ -1312,12 +1362,10 @@
             }
         }
         
-        // Retry button handler
         retryBtn.addEventListener('click', () => {
             fetchGitHubStructure();
         });
         
-        // Populate a select dropdown with options
         function populateSelect(selectElement, options) {
             while (selectElement.options.length > 1) {
                 selectElement.remove(1);
@@ -1330,7 +1378,7 @@
                 selectElement.appendChild(optionElement);
             });
         }
-        // Fetch files based on selections
+        
         async function fetchFiles() {
             if (!semesterSelect.value || !examTypeSelect.value || !courseSelect.value) {
                 showToast('Please select semester, exam type, and course', 'error');
@@ -1346,7 +1394,6 @@
                 debugLog(`Found ${files.length} files`);
                 
                 displayFiles(files, path);
-                
                 showToast(`Found ${files.length} resources`, 'success');
                 
             } catch (error) {
@@ -1356,7 +1403,7 @@
                 showLoading(false);
             }
         }
-        // Display files in the UI
+        
         function displayFiles(files, path) {
             if (files.length === 0) {
                 fileList.innerHTML = `
@@ -1383,7 +1430,9 @@
                 fileRow.className = 'file-row';
                 fileRow.innerHTML = `
                     <div class="checkbox-container">
-                        <input type="checkbox" class="file-checkbox" id="file-${file.sha}" data-url="${fileUrl}" data-name="${file.name}" ${isLarge ? 'disabled' : ''}>
+                        <input type="checkbox" class="file-checkbox" id="file-${file.sha}" 
+                               data-url="${fileUrl}" data-name="${file.name}" data-size="${file.size}"
+                               ${isLarge ? 'disabled' : ''}>
                     </div>
                     <div class="file-icon">
                         <i class="${iconClass}"></i>
@@ -1422,6 +1471,7 @@
                     updateSelectedCount();
                 });
             });
+            
             document.querySelectorAll('.preview-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
                     const url = this.dataset.url;
@@ -1432,7 +1482,7 @@
             
             updateSelectedCount();
         }
-        // Update selected files count
+        
         function updateSelectedCount() {
             selectedFiles = Array.from(document.querySelectorAll('.file-checkbox:checked:not(:disabled)'));
             selectedCount.textContent = selectedFiles.length;
@@ -1443,7 +1493,7 @@
                 selectedCount.style.display = 'none';
             }
         }
-        // Get file type from extension
+        
         function getFileType(filename) {
             const extension = filename.split('.').pop().toLowerCase();
             
@@ -1456,7 +1506,7 @@
             if (['txt', 'md'].includes(extension)) return 'txt';
             return 'other';
         }
-        // Get appropriate icon for file type
+        
         function getFileIconClass(fileType) {
             switch(fileType) {
                 case 'pdf': return 'fas fa-file-pdf';
@@ -1469,14 +1519,14 @@
                 default: return 'fas fa-file';
             }
         }
-        // Format file size in human-readable format
+        
         function formatFileSize(bytes) {
             if (bytes < 1024) return bytes + ' B';
             else if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
             else if (bytes < 1073741824) return (bytes / 1048576).toFixed(1) + ' MB';
             else return (bytes / 1073741824).toFixed(1) + ' GB';
         }
-        // Toast notification system
+        
         function showToast(message, type = 'success') {
             const toast = document.createElement('div');
             toast.className = `toast ${type}`;
@@ -1499,7 +1549,7 @@
                 toast.remove();
             }, 3000);
         }
-        // Select all files
+        
         function toggleSelectAll() {
             const checkboxes = document.querySelectorAll('.file-checkbox:not(:disabled)');
             const allSelected = Array.from(checkboxes).every(checkbox => checkbox.checked);
@@ -1517,7 +1567,7 @@
             updateSelectedCount();
             showToast(allSelected ? 'All files deselected' : 'All files selected', 'success');
         }
-        // Show confirmation modal
+        
         function showConfirmationModal() {
             if (selectedFiles.length === 0) {
                 showToast('Please select files to send', 'error');
@@ -1560,7 +1610,7 @@
             
             confirmationModal.classList.add('active');
         }
-        // Show preview in modal
+        
         function showPreview(url, fileName) {
             const fileType = getFileType(fileName);
             let previewUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`;
@@ -1571,29 +1621,76 @@
             previewModal.classList.add('active');
         }
         
-        // Send a file to Telegram via bot API
-        async function sendFileToTelegram(file, userId) {
+        // Create enhanced progress toast with progress bar and stats
+        function createProgressToast(totalFiles, totalBytes) {
+            const progressToast = document.createElement('div');
+            progressToast.className = 'toast warning';
+            progressToast.innerHTML = `
+                <i class="fas fa-upload"></i>
+                <div class="toast-content">
+                    <h4>Sending Files to Telegram</h4>
+                    <p>Progress: 0/${totalFiles} files</p>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 0%"></div>
+                    </div>
+                    <div class="transfer-stats">
+                        <span class="speed">Speed: Calculating...</span>
+                        <span class="eta">ETA: Calculating...</span>
+                    </div>
+                </div>
+            `;
+            toastContainer.appendChild(progressToast);
+            return progressToast;
+        }
+        
+        // Update progress with enhanced statistics
+        function updateProgressToast(toastElement, completed, total, transferredBytes, totalBytes, startTime) {
+            const progressText = toastElement.querySelector('.toast-content p');
+            const progressFill = toastElement.querySelector('.progress-fill');
+            const speedElement = toastElement.querySelector('.speed');
+            const etaElement = toastElement.querySelector('.eta');
+            
+            const progressPercent = Math.round((completed / total) * 100);
+            progressText.textContent = `Progress: ${completed}/${total} files (${progressPercent}%)`;
+            progressFill.style.width = `${progressPercent}%`;
+            
+            // Calculate transfer speed and ETA
+            const elapsedTime = (Date.now() - startTime) / 1000; // seconds
+            if (elapsedTime > 0) {
+                const speed = transferredBytes / elapsedTime; // bytes per second
+                const speedMB = (speed / (1024 * 1024)).toFixed(1); // MB/s
+                
+                const remainingBytes = totalBytes - transferredBytes;
+                const eta = speed > 0 ? Math.round(remainingBytes / speed) : 0;
+                
+                speedElement.textContent = `Speed: ${speedMB} MB/s`;
+                etaElement.textContent = `ETA: ${eta}s`;
+            }
+        }
+        
+        // Enhanced file sending with better concurrency and error handling
+        async function sendFileToTelegram(file, userId, retryCount = 0) {
             const apiUrl = `https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`;
             
             try {
-                debugLog(`Downloading file: ${file.name}`);
-                const response = await fetch(file.url);
+                debugLog(`Downloading file: ${file.name} (attempt ${retryCount + 1})`);
+                const response = await fetchWithTimeout(file.url, {}, REQUEST_TIMEOUT);
                 if (!response.ok) throw new Error(`Failed to download file: ${response.status}`);
                 
                 const blob = await response.blob();
                 const mimeType = getMimeType(file.name);
                 const fileObj = new File([blob], file.name, { type: mimeType });
                 
-                debugLog(`Sending file to Telegram: ${file.name}`);
+                debugLog(`Sending file to Telegram: ${file.name} (${formatFileSize(blob.size)})`);
                 const formData = new FormData();
                 formData.append('chat_id', userId);
                 formData.append('document', fileObj, file.name);
-                formData.append('caption', `File: ${file.name}`);
+                formData.append('caption', `📁 File: ${file.name}`);
                 
-                const uploadResponse = await fetch(apiUrl, {
+                const uploadResponse = await fetchWithTimeout(apiUrl, {
                     method: 'POST',
                     body: formData
-                });
+                }, REQUEST_TIMEOUT * 2); // Double timeout for upload
                 
                 const result = await uploadResponse.json();
                 
@@ -1601,26 +1698,35 @@
                     let errorMsg = result.description || 'Telegram API error';
                     if (result.error_code === 403) {
                         errorMsg = 'Forbidden: Please start the bot by sending /start to the bot first.';
+                    } else if (result.error_code === 413) {
+                        errorMsg = 'File too large for Telegram (max 50MB)';
+                    } else if (result.error_code === 429) {
+                        errorMsg = 'Rate limited by Telegram. Please wait and try again.';
                     }
                     debugLog(`Telegram API error: ${errorMsg}`);
                     throw new Error(errorMsg);
                 }
                 
                 debugLog(`Successfully sent file: ${file.name}`);
-                return result;
+                return { success: true, size: blob.size, result };
             } catch (error) {
                 debugLog(`Error sending ${file.name}: ${error.message}`);
+                
+                // Retry logic for transient errors
+                if (retryCount < RETRY_ATTEMPTS && 
+                    (error.message.includes('timeout') || 
+                     error.message.includes('network') || 
+                     error.message.includes('429'))) {
+                    debugLog(`Retrying ${file.name} in ${(retryCount + 1) * 2} seconds...`);
+                    await new Promise(resolve => setTimeout(resolve, (retryCount + 1) * 2000));
+                    return sendFileToTelegram(file, userId, retryCount + 1);
+                }
+                
                 throw new Error(`Failed to send ${file.name}: ${error.message}`);
             }
         }
         
-        // Update progress toast
-        function updateProgress(toastElement, current, total) {
-            const progressText = toastElement.querySelector('.toast-content p');
-            progressText.textContent = `Progress: ${current}/${total}`;
-        }
-        
-        // Send files to Telegram
+        // Optimized concurrent file sending
         async function sendToTelegram() {
             const validFiles = selectedFiles.filter(checkbox => {
                 const row = checkbox.closest('.file-row');
@@ -1630,7 +1736,8 @@
             const filesToSend = validFiles.map(checkbox => {
                 return {
                     name: checkbox.dataset.name,
-                    url: checkbox.dataset.url
+                    url: checkbox.dataset.url,
+                    size: parseInt(checkbox.dataset.size) || 0
                 };
             });
             
@@ -1638,70 +1745,101 @@
             actionBtn.disabled = true;
             confirmationModal.classList.remove('active');
             
+            // Initialize transfer statistics
+            transferStats = {
+                startTime: Date.now(),
+                totalFiles: filesToSend.length,
+                completedFiles: 0,
+                totalBytes: filesToSend.reduce((sum, file) => sum + file.size, 0),
+                transferredBytes: 0,
+                errors: []
+            };
+            
             try {
                 if (!isTelegramConnected || !telegramUserId) {
                     throw new Error('Telegram connection not established');
                 }
                 
-                let succeeded = 0;
-                let failed = 0;
-                const totalFiles = filesToSend.length;
+                debugLog(`Starting optimized transfer of ${filesToSend.length} files to Telegram`);
                 
-                debugLog(`Starting to send ${totalFiles} files to Telegram`);
+                // Create enhanced progress toast
+                const progressToast = createProgressToast(transferStats.totalFiles, transferStats.totalBytes);
                 
-                // Create a progress toast
-                const progressToast = document.createElement('div');
-                progressToast.className = 'toast warning';
-                progressToast.innerHTML = `
-                    <i class="fas fa-spinner fa-spin"></i>
-                    <div class="toast-content">
-                        <h4>Sending Files</h4>
-                        <p>Progress: 0/${totalFiles}</p>
-                    </div>
-                `;
-                toastContainer.appendChild(progressToast);
-                
-                // Process files with controlled concurrency
-                const maxConcurrent = 3; // Limit concurrent requests
-                const processing = [];
+                // Process files with optimized concurrency
+                const results = [];
+                const processing = new Set();
                 
                 for (const file of filesToSend) {
                     // Wait if we're at max concurrency
-                    if (processing.length >= maxConcurrent) {
-                        await Promise.race(processing);
+                    while (processing.size >= MAX_CONCURRENT_TRANSFERS) {
+                        await Promise.race([...processing]);
                     }
                     
+                    // Create promise for this file
                     const promise = sendFileToTelegram(file, telegramUserId)
-                        .then(() => {
-                            succeeded++;
-                            updateProgress(progressToast, succeeded + failed, totalFiles);
+                        .then(result => {
+                            transferStats.completedFiles++;
+                            transferStats.transferredBytes += result.size;
+                            results.push({ file, success: true, result });
+                            
+                            // Update progress
+                            updateProgressToast(
+                                progressToast, 
+                                transferStats.completedFiles, 
+                                transferStats.totalFiles,
+                                transferStats.transferredBytes,
+                                transferStats.totalBytes,
+                                transferStats.startTime
+                            );
                         })
                         .catch(error => {
+                            transferStats.completedFiles++;
+                            transferStats.errors.push({ file: file.name, error: error.message });
+                            results.push({ file, success: false, error });
                             console.error(`Failed to send ${file.name}:`, error);
-                            failed++;
-                            updateProgress(progressToast, succeeded + failed, totalFiles);
+                            
+                            // Update progress even for failures
+                            updateProgressToast(
+                                progressToast, 
+                                transferStats.completedFiles, 
+                                transferStats.totalFiles,
+                                transferStats.transferredBytes,
+                                transferStats.totalBytes,
+                                transferStats.startTime
+                            );
                         })
                         .finally(() => {
-                            // Remove this promise from processing array
-                            const index = processing.indexOf(promise);
-                            if (index > -1) processing.splice(index, 1);
+                            processing.delete(promise);
                         });
                     
-                    processing.push(promise);
+                    processing.add(promise);
+                    
+                    // Small delay to prevent overwhelming the API
+                    await new Promise(resolve => setTimeout(resolve, 100));
                 }
                 
                 // Wait for all files to finish processing
-                await Promise.allSettled(processing);
+                while (processing.size > 0) {
+                    await Promise.race([...processing]);
+                }
                 
                 // Remove progress toast
-                progressToast.remove();
+                setTimeout(() => progressToast.remove(), 2000);
                 
-                debugLog(`Finished sending files. Succeeded: ${succeeded}, Failed: ${failed}`);
+                // Calculate final statistics
+                const succeeded = results.filter(r => r.success).length;
+                const failed = results.length - succeeded;
+                const totalTime = (Date.now() - transferStats.startTime) / 1000;
+                const avgSpeed = transferStats.transferredBytes / totalTime / (1024 * 1024); // MB/s
+                
+                debugLog(`Transfer completed in ${totalTime.toFixed(1)}s at ${avgSpeed.toFixed(1)} MB/s`);
+                debugLog(`Results: ${succeeded} succeeded, ${failed} failed`);
                 
                 if (failed > 0) {
-                    showToast(`${succeeded} files sent, ${failed} failed`, 'warning');
+                    const errorSummary = transferStats.errors.slice(0, 3).map(e => `${e.file}: ${e.error}`).join('; ');
+                    showToast(`${succeeded} files sent, ${failed} failed. ${errorSummary}${failed > 3 ? '...' : ''}`, 'warning');
                 } else {
-                    showToast(`${succeeded} files sent to Telegram`, 'success');
+                    showToast(`✅ All ${succeeded} files sent successfully! (${avgSpeed.toFixed(1)} MB/s)`, 'success');
                 }
             } catch (error) {
                 console.error('Telegram send error:', error);
@@ -1710,13 +1848,14 @@
                 updateActionButton();
                 actionBtn.disabled = false;
                 
+                // Clear selections
                 document.querySelectorAll('.file-checkbox').forEach(cb => cb.checked = false);
                 document.querySelectorAll('.file-row').forEach(row => row.classList.remove('selected'));
                 updateSelectedCount();
             }
         }
         
-        // Download selected files as ZIP
+        // Download selected files as ZIP (unchanged but optimized)
         async function downloadSelectedFiles() {
             const validFiles = selectedFiles.filter(checkbox => {
                 const row = checkbox.closest('.file-row');
@@ -1735,23 +1874,30 @@
             
             try {
                 const zip = new JSZip();
+                const downloadPromises = [];
                 
+                // Download files concurrently
                 for (const checkbox of validFiles) {
                     const fileName = checkbox.dataset.name;
                     const fileUrl = checkbox.dataset.url;
                     
-                    try {
-                        debugLog(`Downloading file for ZIP: ${fileName}`);
-                        const response = await fetch(fileUrl);
-                        if (!response.ok) throw new Error(`Failed to download ${fileName}`);
-                        
-                        const blob = await response.blob();
-                        zip.file(fileName, blob);
-                    } catch (error) {
-                        console.error(`Error downloading ${fileName}:`, error);
-                        showToast(`Failed to download ${fileName}`, 'error');
-                    }
+                    const downloadPromise = fetchWithTimeout(fileUrl)
+                        .then(async response => {
+                            if (!response.ok) throw new Error(`Failed to download ${fileName}`);
+                            const blob = await response.blob();
+                            zip.file(fileName, blob);
+                            debugLog(`Added ${fileName} to ZIP`);
+                        })
+                        .catch(error => {
+                            console.error(`Error downloading ${fileName}:`, error);
+                            showToast(`Failed to download ${fileName}`, 'error');
+                        });
+                    
+                    downloadPromises.push(downloadPromise);
                 }
+                
+                // Wait for all downloads
+                await Promise.allSettled(downloadPromises);
                 
                 debugLog(`Creating ZIP file with ${validFiles.length} files`);
                 const content = await zip.generateAsync({type: "blob"});
@@ -1782,7 +1928,7 @@
         
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
-            debugLog('Application initialized');
+            debugLog('Application initialized with performance optimizations');
             initTheme();
             initTelegram();
             fetchGitHubStructure();
@@ -1805,7 +1951,7 @@
             });
             
             setTimeout(() => {
-                showToast('Welcome to Academic Resource Hub! Select your preferences to find course files.', 'success');
+                showToast('Welcome to Academic Resource Hub! Optimized for fast file transfers.', 'success');
             }, 1000);
         });
     </script>
