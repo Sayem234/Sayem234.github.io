@@ -1039,8 +1039,9 @@
         // Performance optimizations
         const MAX_CONCURRENT_TRANSFERS = 10; // Increased from 3
         const REQUEST_TIMEOUT = 15000; // 15 seconds timeout
-        const CHUNK_SIZE = 1024 * 1024; // 1MB chunks for large files
+        const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB Telegram limit
         const RETRY_ATTEMPTS = 2;
+        const RETRY_DELAY = 1500;
         
         // Transfer statistics
         let transferStats = {
@@ -1417,7 +1418,7 @@
             fileList.innerHTML = '';
             
             files.forEach(file => {
-                const isLarge = file.size > 20 * 1024 * 1024; // 20MB
+                const isLarge = file.size > MAX_FILE_SIZE; // 50MB Telegram limit
                 const fileSize = formatFileSize(file.size);
                 const fileUrl = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/main/${path}${encodeURIComponent(file.name)}`;
                 
@@ -1580,7 +1581,7 @@
             });
             
             if (validFiles.length === 0) {
-                showToast('No valid files selected (skip files >20MB)', 'warning');
+                showToast('No valid files selected (skip files >50MB)', 'warning');
                 return;
             }
             
@@ -1668,32 +1669,27 @@
             }
         }
         
-        // Enhanced file sending with better concurrency and error handling
+        // Optimized file sending to Telegram
         async function sendFileToTelegram(file, userId, retryCount = 0) {
             const apiUrl = `https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`;
             
             try {
-                debugLog(`Downloading file: ${file.name} (attempt ${retryCount + 1})`);
-                const response = await fetchWithTimeout(file.url, {}, REQUEST_TIMEOUT);
-                if (!response.ok) throw new Error(`Failed to download file: ${response.status}`);
+                debugLog(`Sending file to Telegram via URL: ${file.name} (${formatFileSize(file.size)})`);
                 
-                const blob = await response.blob();
-                const mimeType = getMimeType(file.name);
-                const fileObj = new File([blob], file.name, { type: mimeType });
-                
-                debugLog(`Sending file to Telegram: ${file.name} (${formatFileSize(blob.size)})`);
-                const formData = new FormData();
-                formData.append('chat_id', userId);
-                formData.append('document', fileObj, file.name);
-                formData.append('caption', `📁 File: ${file.name}`);
-                
-                const uploadResponse = await fetchWithTimeout(apiUrl, {
+                const payload = {
+                    chat_id: userId,
+                    document: file.url,
+                    caption: `📁 File: ${file.name}`
+                };
+
+                const response = await fetchWithTimeout(apiUrl, {
                     method: 'POST',
-                    body: formData
-                }, REQUEST_TIMEOUT * 2); // Double timeout for upload
-                
-                const result = await uploadResponse.json();
-                
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                }, REQUEST_TIMEOUT * 2);
+
+                const result = await response.json();
+
                 if (!result.ok) {
                     let errorMsg = result.description || 'Telegram API error';
                     if (result.error_code === 403) {
@@ -1706,9 +1702,9 @@
                     debugLog(`Telegram API error: ${errorMsg}`);
                     throw new Error(errorMsg);
                 }
-                
+
                 debugLog(`Successfully sent file: ${file.name}`);
-                return { success: true, size: blob.size, result };
+                return { success: true, size: file.size, result };
             } catch (error) {
                 debugLog(`Error sending ${file.name}: ${error.message}`);
                 
