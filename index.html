@@ -801,21 +801,6 @@
             overflow-y: auto;
             color: var(--danger-color);
         }
-        .auth-warning {
-            margin-top: 15px;
-            padding: 15px;
-            background: rgba(255, 159, 28, 0.1);
-            border-left: 4px solid var(--warning-color);
-            border-radius: 8px;
-            font-size: 0.9rem;
-        }
-        .auth-warning h4 {
-            color: var(--warning-color);
-            margin-bottom: 8px;
-        }
-        .auth-warning p {
-            margin-bottom: 5px;
-        }
         /* Progress bar styles */
         .progress-container {
             width: 100%;
@@ -950,15 +935,6 @@
                             <strong>Debug Information:</strong>
                             <div id="debugContent"></div>
                         </div>
-                        
-                        <div class="auth-warning" id="authWarning" style="display: none;">
-                            <h4><i class="fas fa-exclamation-triangle"></i> GitHub Authentication Issue</h4>
-                            <p>The application is running without GitHub authentication.</p>
-                            <p>This may cause rate limiting issues with frequent use.</p>
-                            <p><strong>To fix this:</strong></p>
-                            <p>1. Create a GitHub Personal Access Token with 'repo' scope</p>
-                            <p>2. Update the GITHUB_TOKEN variable in the code</p>
-                        </div>
                     </div>
                 </div>
             </section>
@@ -1028,13 +1004,12 @@
         const retryBtn = document.getElementById('retryBtn');
         const debugInfo = document.getElementById('debugInfo');
         const debugContent = document.getElementById('debugContent');
-        const authWarning = document.getElementById('authWarning');
         
         // Configuration
         const REPO_OWNER = '11UCRES';
         const REPO_NAME = 'cse';
         const BOT_TOKEN = '7954499196:AAF7YiojzLccNyFe-wHDBueJMLVnal-9WhM';
-        const GITHUB_TOKEN = ''; 
+        const GITHUB_TOKEN = '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';
         let telegramUserId = null;
         let isTelegramConnected = false;
         let selectedFiles = [];
@@ -1060,10 +1035,12 @@
             const isDark = document.documentElement.classList.contains('dark-theme');
             localStorage.setItem('theme', isDark ? 'dark' : 'light');
         });
+        
         // Show/hide loading overlay
         function showLoading(show) {
             loadingOverlay.classList.toggle('active', show);
         }
+        
         // Handle exam type changes
         examTypeSelect.addEventListener('change', function() {
             if (this.value === 'previousquestion') {
@@ -1074,6 +1051,7 @@
                 courseSelect.querySelector('option[value=""]').textContent = 'Select Course';
             }
         });
+        
         // Initialize Telegram Web App
         function initTelegram() {
             try {
@@ -1100,6 +1078,7 @@
             // Update UI based on Telegram connection
             updateActionButton();
         }
+        
         // Update action button based on context
         function updateActionButton() {
             if (isTelegramConnected) {
@@ -1117,69 +1096,14 @@
         }
         
         // Enhanced GitHub API request function with fallback authentication
-        async function fetchGitHubAPI(endpoint, useAuthFirst = true) {
+        async function fetchGitHubAPI(endpoint) {
             const url = `https://api.github.com${endpoint}`;
             const headers = {
                 'Accept': 'application/vnd.github.v3+json'
             };
             
-            // Try with authentication first if requested and token is available
-            if (useAuthFirst && GITHUB_TOKEN) {
-                headers['Authorization'] = `token ${GITHUB_TOKEN}`;
-                debugLog(`Trying authenticated request to: ${url}`);
-                
-                try {
-                    const response = await fetch(url, { headers });
-                    debugLog(`Auth response status: ${response.status} ${response.statusText}`);
-                    
-                    // Handle rate limiting
-                    if (response.status === 403) {
-                        const rateLimitRemaining = response.headers.get('X-RateLimit-Remaining');
-                        const rateLimitReset = response.headers.get('X-RateLimit-Reset');
-                        
-                        debugLog(`Rate limit remaining: ${rateLimitRemaining}`);
-                        debugLog(`Rate limit reset: ${new Date(parseInt(rateLimitReset) * 1000).toLocaleString()}`);
-                        
-                        if (rateLimitRemaining === '0') {
-                            const resetTime = new Date(parseInt(rateLimitReset) * 1000);
-                            throw new Error(`GitHub API rate limit exceeded. Try again after ${resetTime.toLocaleTimeString()}`);
-                        }
-                    }
-                    
-                    // Handle bad credentials
-                    if (response.status === 401) {
-                        debugLog(`Bad credentials, falling back to unauthenticated request`);
-                        return fetchGitHubAPI(endpoint, false);
-                    }
-                    
-                    if (!response.ok) {
-                        let errorData;
-                        try {
-                            errorData = await response.json();
-                            debugLog(`Error response: ${JSON.stringify(errorData)}`);
-                        } catch (e) {
-                            debugLog(`Failed to parse error response: ${e.message}`);
-                            errorData = { message: response.statusText };
-                        }
-                        throw new Error(errorData.message || `GitHub API error: ${response.status} ${response.statusText}`);
-                    }
-                    
-                    const data = await response.json();
-                    debugLog(`Successfully fetched data with auth: ${Array.isArray(data) ? `${data.length} items` : 'object'}`);
-                    useAuth = true;
-                    return data;
-                } catch (error) {
-                    if (error.message.includes('Bad credentials')) {
-                        debugLog(`Authentication failed, falling back to unauthenticated request`);
-                        return fetchGitHubAPI(endpoint, false);
-                    }
-                    throw error;
-                }
-            }
-            
-            // Try without authentication
+            // First, try without authentication
             debugLog(`Trying unauthenticated request to: ${url}`);
-            delete headers['Authorization'];
             
             try {
                 const response = await fetch(url, { headers });
@@ -1194,8 +1118,14 @@
                     debugLog(`Rate limit reset: ${new Date(parseInt(rateLimitReset) * 1000).toLocaleString()}`);
                     
                     if (rateLimitRemaining === '0') {
-                        const resetTime = new Date(parseInt(rateLimitReset) * 1000);
-                        throw new Error(`GitHub API rate limit exceeded. Try again after ${resetTime.toLocaleTimeString()}`);
+                        // Rate limit exceeded, try with authentication if token is available
+                        if (GITHUB_TOKEN) {
+                            debugLog(`Rate limit exceeded, trying with authentication`);
+                            return fetchWithAuth(url, headers);
+                        } else {
+                            const resetTime = new Date(parseInt(rateLimitReset) * 1000);
+                            throw new Error(`GitHub API rate limit exceeded. Try again after ${resetTime.toLocaleTimeString()}`);
+                        }
                     }
                 }
                 
@@ -1216,7 +1146,64 @@
                 useAuth = false;
                 return data;
             } catch (error) {
-                debugLog(`Fetch error: ${error.message}`);
+                // If we haven't tried with auth yet and the error is rate limiting, try with auth
+                if (error.message.includes('rate limit exceeded') && GITHUB_TOKEN) {
+                    debugLog(`Rate limit exceeded, trying with authentication`);
+                    return fetchWithAuth(url, headers);
+                }
+                throw error;
+            }
+        }
+        
+        // Helper function to make authenticated requests
+        async function fetchWithAuth(url, headers) {
+            headers['Authorization'] = `token ${GITHUB_TOKEN}`;
+            debugLog(`Trying authenticated request to: ${url}`);
+            
+            try {
+                const response = await fetch(url, { headers });
+                debugLog(`Auth response status: ${response.status} ${response.statusText}`);
+                
+                // Handle rate limiting
+                if (response.status === 403) {
+                    const rateLimitRemaining = response.headers.get('X-RateLimit-Remaining');
+                    const rateLimitReset = response.headers.get('X-RateLimit-Reset');
+                    
+                    debugLog(`Rate limit remaining: ${rateLimitRemaining}`);
+                    debugLog(`Rate limit reset: ${new Date(parseInt(rateLimitReset) * 1000).toLocaleString()}`);
+                    
+                    if (rateLimitRemaining === '0') {
+                        const resetTime = new Date(parseInt(rateLimitReset) * 1000);
+                        throw new Error(`GitHub API rate limit exceeded. Try again after ${resetTime.toLocaleTimeString()}`);
+                    }
+                }
+                
+                // Handle bad credentials
+                if (response.status === 401) {
+                    throw new Error('Bad credentials');
+                }
+                
+                if (!response.ok) {
+                    let errorData;
+                    try {
+                        errorData = await response.json();
+                        debugLog(`Error response: ${JSON.stringify(errorData)}`);
+                    } catch (e) {
+                        debugLog(`Failed to parse error response: ${e.message}`);
+                        errorData = { message: response.statusText };
+                    }
+                    throw new Error(errorData.message || `GitHub API error: ${response.status} ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                debugLog(`Successfully fetched data with auth: ${Array.isArray(data) ? `${data.length} items` : 'object'}`);
+                useAuth = true;
+                return data;
+            } catch (error) {
+                if (error.message === 'Bad credentials') {
+                    debugLog(`Bad credentials, cannot use authentication`);
+                    throw new Error('GitHub token is invalid or has been revoked');
+                }
                 throw error;
             }
         }
@@ -1227,7 +1214,6 @@
             placeholderText.textContent = 'Loading repository structure...';
             retrySection.style.display = 'none';
             debugInfo.style.display = 'none';
-            authWarning.style.display = 'none';
             debugContent.innerHTML = '';
             
             try {
@@ -1246,15 +1232,6 @@
                 const semesters = data.filter(item => item.type === 'dir').map(item => item.name);
                 debugLog(`Found semesters: ${semesters.join(', ')}`);
                 populateSelect(semesterSelect, semesters);
-                
-                // Show auth warning if not using authentication
-                if (!useAuth && GITHUB_TOKEN) {
-                    authWarning.style.display = 'block';
-                    debugLog(`Authentication failed, running without GitHub token`);
-                } else if (!useAuth && !GITHUB_TOKEN) {
-                    authWarning.style.display = 'block';
-                    debugLog(`No GitHub token provided, running without authentication`);
-                }
                 
                 // When semester is selected, fetch exam types
                 semesterSelect.addEventListener('change', async () => {
@@ -1303,15 +1280,20 @@
             } catch (error) {
                 console.error('Failed to fetch repository structure:', error);
                 debugLog(`Failed to fetch repository structure: ${error.message}`);
-                showToast(`Failed to load repository: ${error.message}`, 'error');
-                placeholderText.textContent = `Failed to load repository: ${error.message}`;
+                
+                if (error.message.includes('rate limit exceeded')) {
+                    showToast('GitHub API rate limit exceeded. Please try again later.', 'error');
+                    placeholderText.textContent = 'GitHub API rate limit exceeded. Please try again later.';
+                } else if (error.message.includes('Bad credentials') || error.message.includes('401')) {
+                    showToast('GitHub token is invalid or has been revoked.', 'error');
+                    placeholderText.textContent = 'GitHub token is invalid or has been revoked.';
+                } else {
+                    showToast(`Failed to load repository: ${error.message}`, 'error');
+                    placeholderText.textContent = `Failed to load repository: ${error.message}`;
+                }
+                
                 retrySection.style.display = 'block';
                 debugInfo.style.display = 'block';
-                
-                // Show auth warning if there was an authentication error
-                if (error.message.includes('Bad credentials') || error.message.includes('401')) {
-                    authWarning.style.display = 'block';
-                }
             } finally {
                 showLoading(false);
             }
@@ -1335,6 +1317,7 @@
                 selectElement.appendChild(optionElement);
             });
         }
+        
         // Fetch files based on selections
         async function fetchFiles() {
             if (!semesterSelect.value || !examTypeSelect.value || !courseSelect.value) {
@@ -1361,6 +1344,7 @@
                 showLoading(false);
             }
         }
+        
         // Display files in the UI
         function displayFiles(files, path) {
             if (files.length === 0) {
@@ -1437,6 +1421,7 @@
             
             updateSelectedCount();
         }
+        
         // Update selected files count
         function updateSelectedCount() {
             selectedFiles = Array.from(document.querySelectorAll('.file-checkbox:checked:not(:disabled)'));
@@ -1448,6 +1433,7 @@
                 selectedCount.style.display = 'none';
             }
         }
+        
         // Get file type from extension
         function getFileType(filename) {
             const extension = filename.split('.').pop().toLowerCase();
@@ -1461,6 +1447,7 @@
             if (['txt', 'md'].includes(extension)) return 'txt';
             return 'other';
         }
+        
         // Get appropriate icon for file type
         function getFileIconClass(fileType) {
             switch(fileType) {
@@ -1474,6 +1461,7 @@
                 default: return 'fas fa-file';
             }
         }
+        
         // Format file size in human-readable format
         function formatFileSize(bytes) {
             if (bytes < 1024) return bytes + ' B';
@@ -1481,6 +1469,7 @@
             else if (bytes < 1073741824) return (bytes / 1048576).toFixed(1) + ' MB';
             else return (bytes / 1073741824).toFixed(1) + ' GB';
         }
+        
         // Toast notification system
         function showToast(message, type = 'success') {
             const toast = document.createElement('div');
@@ -1504,6 +1493,7 @@
                 toast.remove();
             }, 3000);
         }
+        
         // Select all files
         function toggleSelectAll() {
             const checkboxes = document.querySelectorAll('.file-checkbox:not(:disabled)');
@@ -1522,6 +1512,7 @@
             updateSelectedCount();
             showToast(allSelected ? 'All files deselected' : 'All files selected', 'success');
         }
+        
         // Show confirmation modal
         function showConfirmationModal() {
             if (selectedFiles.length === 0) {
@@ -1565,6 +1556,7 @@
             
             confirmationModal.classList.add('active');
         }
+        
         // Show preview in modal
         function showPreview(url, fileName) {
             const fileType = getFileType(fileName);
