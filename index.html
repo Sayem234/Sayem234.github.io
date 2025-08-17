@@ -1586,7 +1586,8 @@
                 const params = new URLSearchParams({
                     chat_id: userId,
                     document: file.url,
-                    caption: `File: ${file.name}`
+                    caption: `Requested from : @iiuccseresourcebot`
+                    //caption: `File: ${file.name}`
                 });
                 
                 const response = await fetch(`${apiUrl}?${params}`);
