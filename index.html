@@ -946,15 +946,6 @@
                             <strong>Debug Information:</strong>
                             <div id="debugContent"></div>
                         </div>
-                        
-                        <div class="auth-warning" id="authWarning" style="display: none;">
-                            <h4><i class="fas fa-exclamation-triangle"></i> GitHub Authentication Issue</h4>
-                            <p>The application is running without GitHub authentication.</p>
-                            <p>This may cause rate limiting issues with frequent use.</p>
-                            <p><strong>To fix this:</strong></p>
-                            <p>1. Create a GitHub Personal Access Token with 'repo' scope</p>
-                            <p>2. Update the GITHUB_TOKEN variable in the code</p>
-                        </div>
                     </div>
                 </div>
             </section>
@@ -1297,15 +1288,7 @@
                 const semesters = data.filter(item => item.type === 'dir').map(item => item.name);
                 debugLog(`Found semesters: ${semesters.join(', ')}`);
                 populateSelect(semesterSelect, semesters);
-                
-                if (!useAuth && GITHUB_TOKEN) {
-                    authWarning.style.display = 'block';
-                    debugLog(`Authentication failed, running without GitHub token`);
-                } else if (!useAuth && !GITHUB_TOKEN) {
-                    authWarning.style.display = 'block';
-                    debugLog(`No GitHub token provided, running without authentication`);
-                }
-                
+            
                 semesterSelect.addEventListener('change', async () => {
                     if (!semesterSelect.value) return;
                     
