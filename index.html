@@ -1622,53 +1622,6 @@
             previewModal.classList.add('active');
         }
         
-        // Create enhanced progress toast with progress bar and stats
-        function createProgressToast(totalFiles, totalBytes) {
-            const progressToast = document.createElement('div');
-            progressToast.className = 'toast warning';
-            progressToast.innerHTML = `
-                <i class="fas fa-upload"></i>
-                <div class="toast-content">
-                    <h4>Sending Files to Telegram</h4>
-                    <p>Progress: 0/${totalFiles} files</p>
-                    <div class="progress-bar">
-                        <div class="progress-fill" style="width: 0%"></div>
-                    </div>
-                    <div class="transfer-stats">
-                        <span class="speed">Speed: Calculating...</span>
-                        <span class="eta">ETA: Calculating...</span>
-                    </div>
-                </div>
-            `;
-            toastContainer.appendChild(progressToast);
-            return progressToast;
-        }
-        
-        // Update progress with enhanced statistics
-        function updateProgressToast(toastElement, completed, total, transferredBytes, totalBytes, startTime) {
-            const progressText = toastElement.querySelector('.toast-content p');
-            const progressFill = toastElement.querySelector('.progress-fill');
-            const speedElement = toastElement.querySelector('.speed');
-            const etaElement = toastElement.querySelector('.eta');
-            
-            const progressPercent = Math.round((completed / total) * 100);
-            progressText.textContent = `Progress: ${completed}/${total} files (${progressPercent}%)`;
-            progressFill.style.width = `${progressPercent}%`;
-            
-            // Calculate transfer speed and ETA
-            const elapsedTime = (Date.now() - startTime) / 1000; // seconds
-            if (elapsedTime > 0) {
-                const speed = transferredBytes / elapsedTime; // bytes per second
-                const speedMB = (speed / (1024 * 1024)).toFixed(1); // MB/s
-                
-                const remainingBytes = totalBytes - transferredBytes;
-                const eta = speed > 0 ? Math.round(remainingBytes / speed) : 0;
-                
-                speedElement.textContent = `Speed: ${speedMB} MB/s`;
-                etaElement.textContent = `ETA: ${eta}s`;
-            }
-        }
-        
         // Optimized file sending to Telegram
         async function sendFileToTelegram(file, userId, retryCount = 0) {
             const apiUrl = `https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`;
