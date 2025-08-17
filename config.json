@@ -1,0 +1,11 @@
+const youtubeResourcesConfig = {
+    "Semester1/Mid/CSE-1121": [
+        {
+            "title": "Import video",
+            "type": "Playlist",
+            "url": "https://youtu.be/5WQgLboa_I8?si=Yf62jV9N6nTeG53N",
+            "thumbnail": "Thumbnail URL (optional)"
+        }
+    ],
+    // Add more courses here...
+};
