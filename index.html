@@ -939,26 +939,6 @@
                                 <div class="stat-label">Semesters</div>
                             </div>
                         </div>
-                        
-                        <div class="retry-section" id="retrySection" style="display: none;">
-                            <button class="retry-btn" id="retryBtn">
-                                <i class="fas fa-redo"></i> Retry Loading
-                            </button>
-                        </div>
-                        
-                        <div class="debug-info" id="debugInfo" style="display: none;">
-                            <strong>Debug Information:</strong>
-                            <div id="debugContent"></div>
-                        </div>
-                        
-                        <div class="auth-warning" id="authWarning" style="display: none;">
-                            <h4><i class="fas fa-exclamation-triangle"></i> GitHub Authentication Issue</h4>
-                            <p>The application is running without GitHub authentication.</p>
-                            <p>This may cause rate limiting issues with frequent use.</p>
-                            <p><strong>To fix this:</strong></p>
-                            <p>1. Create a GitHub Personal Access Token with 'repo' scope</p>
-                            <p>2. Update the GITHUB_TOKEN variable in the code</p>
-                        </div>
                     </div>
                 </div>
             </section>
@@ -1034,7 +1014,7 @@
         const REPO_OWNER = '11UCRES';
         const REPO_NAME = 'cse';
         const BOT_TOKEN = '7616102961:AAHqU8SwIZtPCwmx34TqTbmgECHx1h0w4JI';
-        const GITHUB_TOKEN = ''; 
+        const GITHUB_TOKEN = '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'; 
         let telegramUserId = null;
         let isTelegramConnected = false;
         let selectedFiles = [];
