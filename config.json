@@ -2,10 +2,32 @@ const youtubeResourcesConfig = {
     "Semester1/Mid/CSE-1121": [
         {
             "title": "Import video",
-            "type": "Playlist",
+            "type": "Video",  // Changed to Video since it's a single video
             "url": "https://youtu.be/5WQgLboa_I8?si=Yf62jV9N6nTeG53N",
-            "thumbnail": "Thumbnail URL (optional)"
+            "thumbnail": "https://img.youtube.com/vi/5WQgLboa_I8/default.jpg"
         }
     ],
-    // Add more courses here...
+    "Semester1/Final/CSE-1121": [
+        {
+            "title": "Complete Course Playlist",
+            "type": "Playlist",
+            "url": "https://www.youtube.com/playlist?list=PLAYLIST_ID",
+            "thumbnail": "https://img.youtube.com/vi/FIRST_VIDEO_ID/default.jpg"
+        }
+    ],
+    "Semester2/Mid/CSE-1122": [
+        {
+            "title": "Advanced Concepts",
+            "type": "Video",
+            "url": "https://youtu.be/ANOTHER_VIDEO_ID",
+            "thumbnail": "https://img.youtube.com/vi/ANOTHER_VIDEO_ID/default.jpg"
+        },
+        {
+            "title": "Tutorial Series",
+            "type": "Playlist",
+            "url": "https://www.youtube.com/playlist?list=ANOTHER_PLAYLIST_ID",
+            "thumbnail": "https://img.youtube.com/vi/FIRST_VIDEO_OF_PLAYLIST/default.jpg"
+        }
+    ]
+    // Add more courses as needed...
 };
