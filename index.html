@@ -9,7 +9,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        /* Styles remain the same as original */
         :root {
             --primary-color: #4361ee;
             --secondary-color: #3a0ca3;
@@ -537,6 +536,7 @@
             
             .checkbox-container {
                 grid-row: 1;
+            perspective: none;
             }
         }
         @media (max-width: 600px) {
@@ -801,7 +801,6 @@
             overflow-y: auto;
             color: var(--danger-color);
         }
-        /* Progress bar styles */
         .progress-container {
             width: 100%;
             height: 6px;
@@ -828,7 +827,6 @@
             font-weight: 600;
             color: var(--primary-color);
         }
-        /* Parallel upload indicator */
         .parallel-upload {
             display: flex;
             align-items: center;
@@ -885,15 +883,13 @@
                         <select id="semester">
                             <option value="">Select Semester</option>
                         </select>
-                    </div>
-                    
+                    diverting
                     <div class="pref-group">
                         <label for="examType">Exam Type</label>
                         <select id="examType">
                             <option value="">Select Exam Type</option>
                         </select>
                     </div>
-                    
                     <div class="pref-group">
                         <label for="course" id="courseLabel">Select Course</label>
                         <select id="course">
@@ -901,7 +897,6 @@
                         </select>
                     </div>
                 </div>
-                
                 <div class="buttons">
                     <button class="btn btn-primary" id="searchBtn">
                         <i class="fas fa-search"></i> Find Resources
@@ -915,7 +910,6 @@
                     </button>
                 </div>
             </section>
-            
             <section class="card">
                 <div class="card-header">
                     <h2><i class="fas fa-folder-open"></i> Available Resources</h2>
@@ -924,7 +918,6 @@
                     <div class="placeholder">
                         <i class="fas fa-database"></i>
                         <p id="placeholderText">Loading repository structure...</p>
-                        
                         <div class="stats">
                             <div class="stat-box">
                                 <div class="stat-value">1,250+</div>
@@ -939,13 +932,11 @@
                                 <div class="stat-label">Semesters</div>
                             </div>
                         </div>
-                        
                         <div class="retry-section" id="retrySection" style="display: none;">
                             <button class="retry-btn" id="retryBtn">
                                 <i class="fas fa-redo"></i> Retry Loading
                             </button>
                         </div>
-                        
                         <div class="debug-info" id="debugInfo" style="display: none;">
                             <strong>Debug Information:</strong>
                             <div id="debugContent"></div>
@@ -964,9 +955,7 @@
             </div>
             <div class="modal-body">
                 <p id="modalMessage">You are about to send <strong><span id="fileCount">0</span> files</strong> to Telegram. This may take a few moments.</p>
-                <div class="modal-file-list" id="modalFileList">
-                    <!-- Files will be listed here -->
-                </div>
+                <div class="modal-file-list" id="modalFileList"></div>
                 <div class="parallel-upload" id="parallelUploadInfo" style="display: none;">
                     <i class="fas fa-bolt"></i>
                     <span>Using parallel upload for faster transfer</span>
@@ -1025,22 +1014,22 @@
         const debugInfo = document.getElementById('debugInfo');
         const debugContent = document.getElementById('debugContent');
         const parallelUploadInfo = document.getElementById('parallelUploadInfo');
-        
-        // Configuration - Updated with your provided keys
+
+        // Configuration
         const DRIVE_API_KEY = 'AIzaSyDF0qDqon7LUpPxM3S3XOGmiXqHY9BG5_4';
-        const DRIVE_FOLDER_ID = '1GtKc243UyP_pWvmFKbxwTRSy_PvQ7rsF'; // Root folder ID for academic resources
+        const DRIVE_FOLDER_ID = '1GtKc243UyP_pWvmFKbxwTRSy_PvQ7rsF';
         const BOT_TOKEN = '7616102961:AAHqU8SwIZtPCwmx34TqTbmgECHx1h0w4JI';
         let telegramUserId = null;
         let isTelegramConnected = false;
         let selectedFiles = [];
-        
+
         // Folder structure mapping
         const folderStructure = {
             semesters: {},
             examTypes: {},
             courses: {}
         };
-        
+
         // Debug logging function
         function debugLog(message) {
             console.log(`[DEBUG] ${message}`);
@@ -1048,7 +1037,7 @@
                 debugContent.innerHTML += `<div>${new Date().toLocaleTimeString()}: ${message}</div>`;
             }
         }
-        
+
         // Theme Management
         function initTheme() {
             const savedTheme = localStorage.getItem('theme') || 'light';
@@ -1061,12 +1050,12 @@
             const isDark = document.documentElement.classList.contains('dark-theme');
             localStorage.setItem('theme', isDark ? 'dark' : 'light');
         });
-        
+
         // Show/hide loading overlay
         function showLoading(show) {
             loadingOverlay.classList.toggle('active', show);
         }
-        
+
         // Handle exam type changes
         examTypeSelect.addEventListener('change', function() {
             if (this.value === 'previousquestion') {
@@ -1077,7 +1066,7 @@
                 courseSelect.querySelector('option[value=""]').textContent = 'Select Course';
             }
         });
-        
+
         // Initialize Telegram Web App
         function initTelegram() {
             try {
@@ -1100,11 +1089,9 @@
                 console.error('Telegram WebApp initialization error:', e);
                 telegramStatusText.textContent = 'Telegram: Connection failed';
             }
-            
-            // Update UI based on Telegram connection
             updateActionButton();
         }
-        
+
         // Update action button based on context
         function updateActionButton() {
             if (isTelegramConnected) {
@@ -1116,16 +1103,14 @@
                 actionBtn.classList.add('btn-download');
                 actionBtn.classList.remove('btn-telegram');
             }
-            
-            // Update badge
             updateSelectedCount();
         }
-        
+
         // Function to validate API key format
         function isValidApiKey(key) {
             return key && key.length > 20 && key !== 'YOUR_ACTUAL_API_KEY_HERE';
         }
-        
+
         // Function to check if API key is valid
         function checkApiKey() {
             if (!isValidApiKey(DRIVE_API_KEY)) {
@@ -1144,7 +1129,7 @@
             }
             return true;
         }
-        
+
         // Fetch folder structure from Google Drive
         async function fetchDriveStructure() {
             showLoading(true);
@@ -1156,24 +1141,19 @@
             try {
                 debugLog(`Starting to fetch folder structure from Google Drive (ID: ${DRIVE_FOLDER_ID})`);
                 
-                // Check API key first
                 if (!checkApiKey()) {
                     throw new Error('Invalid API key');
                 }
                 
-                // Fetch top-level folders (semesters)
                 const semesters = await fetchDriveFolders(DRIVE_FOLDER_ID);
                 debugLog(`Found ${semesters.length} semesters`);
                 
-                // Populate semester dropdown
                 populateSelect(semesterSelect, semesters.map(folder => folder.name));
                 
-                // Store folder IDs for later use
                 semesters.forEach(folder => {
                     folderStructure.semesters[folder.name] = folder.id;
                 });
                 
-                // When semester is selected, fetch exam types
                 semesterSelect.addEventListener('change', async () => {
                     if (!semesterSelect.value) return;
                     
@@ -1184,15 +1164,12 @@
                         const examTypes = await fetchDriveFolders(semesterId);
                         debugLog(`Found ${examTypes.length} exam types`);
                         
-                        // Populate exam type dropdown
                         populateSelect(examTypeSelect, examTypes.map(folder => folder.name));
                         
-                        // Store folder IDs
                         examTypes.forEach(folder => {
                             folderStructure.examTypes[folder.name] = folder.id;
                         });
                         
-                        // Reset course dropdown
                         courseSelect.innerHTML = '<option value="">Select Course</option>';
                     } catch (error) {
                         debugLog(`Error fetching exam types: ${error.message}`);
@@ -1202,7 +1179,6 @@
                     }
                 });
                 
-                // When exam type is selected, fetch courses
                 examTypeSelect.addEventListener('change', async () => {
                     if (!semesterSelect.value || !examTypeSelect.value) return;
                     
@@ -1213,10 +1189,8 @@
                         const courses = await fetchDriveFolders(examTypeId);
                         debugLog(`Found ${courses.length} courses`);
                         
-                        // Populate course dropdown
                         populateSelect(courseSelect, courses.map(folder => folder.name));
                         
-                        // Store folder IDs
                         courses.forEach(folder => {
                             folderStructure.courses[folder.name] = folder.id;
                         });
@@ -1241,10 +1215,9 @@
                 showLoading(false);
             }
         }
-        
+
         // Fetch folders from Google Drive
         async function fetchDriveFolders(parentId) {
-            // Ensure proper URL encoding
             const encodedParentId = encodeURIComponent(parentId);
             const url = `https://www.googleapis.com/drive/v3/files?q='${encodedParentId}'+in+parents+and+mimeType='application/vnd.google-apps.folder'&key=${DRIVE_API_KEY}`;
             
@@ -1275,12 +1248,12 @@
                 throw error;
             }
         }
-        
+
         // Retry button handler
         retryBtn.addEventListener('click', () => {
             fetchDriveStructure();
         });
-        
+
         // Populate a select dropdown with options
         function populateSelect(selectElement, options) {
             while (selectElement.options.length > 1) {
@@ -1294,7 +1267,7 @@
                 selectElement.appendChild(optionElement);
             });
         }
-        
+
         // Fetch files based on selections
         async function fetchFiles() {
             if (!semesterSelect.value || !examTypeSelect.value || !courseSelect.value) {
@@ -1324,14 +1297,12 @@
                 showLoading(false);
             }
         }
-        
+
         // Fetch files from Google Drive folder
         async function fetchDriveFiles(folderId) {
-            // Ensure proper URL encoding
             const encodedFolderId = encodeURIComponent(folderId);
-            
-            // Add fields parameter to get file size and other metadata
-            const url = `https://www.googleapis.com/drive/v3/files?q='${encodedFolderId}'+in+parents+and+trashed+=+false&fields=files(id,name,size,webViewLink,webContentLink,mimeType)&key=${DRIVE_API_KEY}`;
+            const url = `https://www.googleapis.com/drive/v3/files?q='${encodedFolderId}'+in Magician in the Middle
+in+parents+and+trashed+=+false&fields=files(id,name,size,webViewLink,webContentLink,mimeType)&key=${DRIVE_API_KEY}`;
             
             debugLog(`Fetching files with URL: ${url.substring(0, 100)}...`);
             
@@ -1364,7 +1335,7 @@
                 throw error;
             }
         }
-        
+
         // Display files in the UI
         function displayFiles(files) {
             if (files.length === 0) {
@@ -1379,13 +1350,10 @@
             fileList.innerHTML = '';
             
             files.forEach(file => {
-                const isLarge = file.size > 50 * 1024 * 1024; // 50MB (Telegram limit)
+                const isLarge = file.size > 50 * 1024 * 1024;
                 const fileSize = formatFileSize(file.size);
-                
-                // Use mimeType to determine file type if extension is unclear
                 const fileType = getFileType(file.name, file.mimeType);
                 const iconClass = getFileIconClass(fileType);
-                
                 const showActions = !isTelegramConnected;
                 
                 const fileRow = document.createElement('div');
@@ -1428,7 +1396,6 @@
                     } else {
                         row.classList.remove('selected');
                     }
-                    
                     updateSelectedCount();
                 });
             });
@@ -1443,22 +1410,16 @@
             
             updateSelectedCount();
         }
-        
+
         // Update selected files count
         function updateSelectedCount() {
             selectedFiles = Array.from(document.querySelectorAll('.file-checkbox:checked:not(:disabled)'));
             selectedCount.textContent = selectedFiles.length;
-            
-            if (selectedFiles.length > 0) {
-                selectedCount.style.display = 'flex';
-            } else {
-                selectedCount.style.display = 'none';
-            }
+            selectedCount.style.display = selectedFiles.length > 0 ? 'flex' : 'none';
         }
-        
+
         // Get file type from extension or mimeType
         function getFileType(filename, mimeType) {
-            // First try to determine from mimeType
             if (mimeType) {
                 if (mimeType.includes('pdf')) return 'pdf';
                 if (mimeType.includes('word') || mimeType.includes('document')) return 'doc';
@@ -1468,10 +1429,7 @@
                 if (mimeType.includes('text')) return 'txt';
                 if (mimeType.includes('zip') || mimeType.includes('rar')) return 'zip';
             }
-            
-            // Fall back to file extension
             const extension = filename.split('.').pop().toLowerCase();
-            
             if (['pdf'].includes(extension)) return 'pdf';
             if (['doc', 'docx'].includes(extension)) return 'doc';
             if (['ppt', 'pptx'].includes(extension)) return 'ppt';
@@ -1481,7 +1439,7 @@
             if (['txt', 'md'].includes(extension)) return 'txt';
             return 'other';
         }
-        
+
         // Get appropriate icon for file type
         function getFileIconClass(fileType) {
             switch(fileType) {
@@ -1495,7 +1453,7 @@
                 default: return 'fas fa-file';
             }
         }
-        
+
         // Format file size in human-readable format
         function formatFileSize(bytes) {
             if (bytes === 0) return '0 Bytes';
@@ -1504,16 +1462,14 @@
             const i = Math.floor(Math.log(bytes) / Math.log(k));
             return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
         }
-        
+
         // Toast notification system
         function showToast(message, type = 'success') {
             const toast = document.createElement('div');
             toast.className = `toast ${type}`;
-            
             let icon = 'fas fa-check-circle';
             if (type === 'error') icon = 'fas fa-exclamation-circle';
             if (type === 'warning') icon = 'fas fa-exclamation-triangle';
-            
             toast.innerHTML = `
                 <i class="${icon}"></i>
                 <div class="toast-content">
@@ -1521,19 +1477,14 @@
                     <p>${message}</p>
                 </div>
             `;
-            
             toastContainer.appendChild(toast);
-            
-            setTimeout(() => {
-                toast.remove();
-            }, 3000);
+            setTimeout(() => toast.remove(), 3000);
         }
-        
+
         // Select all files
         function toggleSelectAll() {
             const checkboxes = document.querySelectorAll('.file-checkbox:not(:disabled)');
             const allSelected = Array.from(checkboxes).every(checkbox => checkbox.checked);
-            
             checkboxes.forEach(checkbox => {
                 checkbox.checked = !allSelected;
                 const row = checkbox.closest('.file-row');
@@ -1543,51 +1494,39 @@
                     row.classList.remove('selected');
                 }
             });
-            
             updateSelectedCount();
             showToast(allSelected ? 'All files deselected' : 'All files selected', 'success');
         }
-        
+
         // Show confirmation modal
         function showConfirmationModal() {
             if (selectedFiles.length === 0) {
                 showToast('Please select files to send', 'error');
                 return;
             }
-            
             const validFiles = selectedFiles.filter(checkbox => {
                 const row = checkbox.closest('.file-row');
                 return !row.querySelector('.file-warning');
             });
-            
             if (validFiles.length === 0) {
                 showToast('No valid files selected (skip files >50MB)', 'warning');
                 return;
             }
-            
             fileCount.textContent = validFiles.length;
             modalFileList.innerHTML = '';
-            
             validFiles.forEach(checkbox => {
                 const fileName = checkbox.dataset.name;
                 const listItem = document.createElement('li');
                 listItem.innerHTML = `<i class="fas fa-file"></i> ${fileName}`;
                 modalFileList.appendChild(listItem);
             });
-            
             if (isTelegramConnected) {
                 modalTitle.innerHTML = '<i class="fab fa-telegram"></i> Confirm File Transfer';
                 modalMessage.innerHTML = `You are about to send <strong>${validFiles.length} files</strong> to Telegram. This may take a few moments.`;
                 confirmAction.innerHTML = '<i class="fab fa-telegram"></i> Send Now';
                 confirmAction.classList.add('btn-telegram');
                 confirmAction.classList.remove('btn-download');
-                
-                // Show parallel upload info for multiple files
-                if (validFiles.length > 1) {
-                    parallelUploadInfo.style.display = 'flex';
-                } else {
-                    parallelUploadInfo.style.display = 'none';
-                }
+                parallelUploadInfo.style.display = validFiles.length > 1 ? 'flex' : 'none';
             } else {
                 modalTitle.innerHTML = '<i class="fas fa-download"></i> Confirm Download';
                 modalMessage.innerHTML = `You are about to download <strong>${validFiles.length} files</strong>. Large files may take longer to download.`;
@@ -1596,120 +1535,102 @@
                 confirmAction.classList.remove('btn-telegram');
                 parallelUploadInfo.style.display = 'none';
             }
-            
             confirmationModal.classList.add('active');
         }
-        
+
         // Show preview in modal
         function showPreview(url, fileName) {
             const fileType = getFileType(fileName);
             let previewUrl = url;
-            
-            // Use Google Drive embed URLs for better preview
             if (fileType === 'pdf') {
                 previewUrl = `https://drive.google.com/file/d/${extractFileIdFromUrl(url)}/preview`;
             } else if (['doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx'].includes(fileType)) {
-                // For Google Docs, Sheets, etc., use the preview link
                 previewUrl = `https://drive.google.com/file/d/${extractFileIdFromUrl(url)}/preview`;
             } else if (['jpg', 'jpeg', 'png', 'gif'].includes(fileType)) {
-                // For images, use direct link
                 previewUrl = url;
             } else {
-                // For other file types, use Google Docs viewer
                 previewUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`;
             }
-            
             previewIframe.src = previewUrl;
             previewModal.classList.add('active');
         }
-        
+
         // Helper function to extract file ID from Google Drive URL
         function extractFileIdFromUrl(url) {
             const match = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
             return match ? match[1] : '';
         }
-        
-        // Send a file to Telegram via bot API - COMPLETELY REWRITTEN VERSION
-        async function sendFileToTelegram(file, userId) {
-            try {
-                debugLog(`Sending file to Telegram: ${file.name} (Size: ${formatFileSize(file.size)})`);
-                
-                // Check if file is too large for Telegram (50MB limit)
-                if (file.size > 50 * 1024 * 1024) {
-                    throw new Error(`File ${file.name} is too large (max 50MB)`);
+
+        // Send a single file to Telegram via bot API
+        async function sendFileToTelegram(file, userId, retryCount = 3) {
+            for (let attempt = 1; attempt <= retryCount; attempt++) {
+                try {
+                    debugLog(`Attempt ${attempt} to send file: ${file.name} (Size: ${formatFileSize(file.size)})`);
+                    if (file.size > 50 * 1024 * 1024) {
+                        throw new Error(`File ${file.name} exceeds Telegram's 50MB limit`);
+                    }
+                    const downloadResponse = await fetch(file.url, {
+                        headers: {
+                            'Accept': 'application/octet-stream'
+                        }
+                    });
+                    if (!downloadResponse.ok) {
+                        throw new Error(`Failed to download ${file.name}: ${downloadResponse.statusText}`);
+                    }
+                    const blob = await downloadResponse.blob();
+                    const formData = new FormData();
+                    formData.append('chat_id', userId);
+                    formData.append('document', new File([blob], file.name, {
+                        type: blob.type || 'application/octet-stream'
+                    }));
+                    formData.append('caption', `File: ${file.name}`);
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 30000);
+                    const telegramUrl = `https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`;
+                    const telegramResponse = await fetch(telegramUrl, {
+                        method: 'POST',
+                        body: formData,
+                        signal: controller.signal
+                    });
+                    clearTimeout(timeoutId);
+                    const result = await telegramResponse.json();
+                    if (!result.ok) {
+                        throw new Error(`Telegram API error: ${result.description || 'Unknown error'}`);
+                    }
+                    debugLog(`Successfully sent file: ${file.name}`);
+                    return { success: true, file: file.name };
+                } catch (error) {
+                    debugLog(`Attempt ${attempt} failed for ${file.name}: ${error.message}`);
+                    if (attempt === retryCount) {
+                        return { success: false, file: file.name, error: error.message };
+                    }
+                    await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
                 }
-                
-                // Download the file from Google Drive
-                const downloadResponse = await fetch(file.url);
-                if (!downloadResponse.ok) {
-                    throw new Error(`Failed to download file: ${file.name}`);
-                }
-                
-                // Get the file content as a blob
-                const blob = await downloadResponse.blob();
-                
-                // Create a FormData object
-                const formData = new FormData();
-                formData.append('chat_id', userId);
-                
-                // Create a File object with the correct filename
-                // This is the key to preserving the filename
-                const fileObj = new File([blob], file.name, { type: blob.type || 'application/octet-stream' });
-                
-                // Add the file to FormData
-                formData.append('document', fileObj);
-                
-                // Add a caption with the filename
-                formData.append('caption', `File: ${file.name}`);
-                
-                // Send to Telegram using the sendDocument method
-                const telegramUrl = `https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`;
-                
-                const telegramResponse = await fetch(telegramUrl, {
-                    method: 'POST',
-                    body: formData
-                });
-                
-                const result = await telegramResponse.json();
-                
-                if (!result.ok) {
-                    throw new Error(`Telegram API error: ${result.description || 'Unknown error'}`);
-                }
-                
-                debugLog(`Successfully sent file: ${file.name}`);
-                return true;
-            } catch (error) {
-                debugLog(`Error sending ${file.name}: ${error.message}`);
-                throw error;
             }
         }
-        
-        // Send files to Telegram using parallel processing - COMPLETELY REWRITTEN VERSION
+
+        // Send files to Telegram with optimized parallel processing
         async function sendToTelegram() {
-            // Get file data from checkboxes including size
-            const validFiles = selectedFiles.map(checkbox => {
-                return {
-                    name: checkbox.dataset.name,
-                    url: checkbox.dataset.url,
-                    size: parseInt(checkbox.dataset.size) || 0
-                };
-            });
-            
+            const validFiles = selectedFiles.map(checkbox => ({
+                name: checkbox.dataset.name,
+                url: checkbox.dataset.url,
+                size: parseInt(checkbox.dataset.size) || 0
+            }));
+            if (validFiles.length === 0) {
+                showToast('No valid files selected', 'error');
+                return;
+            }
             actionBtn.innerHTML = '<span class="loading"></span> Sending...';
             actionBtn.disabled = true;
             confirmationModal.classList.remove('active');
-            
             try {
                 if (!isTelegramConnected || !telegramUserId) {
                     throw new Error('Telegram connection not established');
                 }
-                
                 let succeeded = 0;
                 const totalFiles = validFiles.length;
-                
-                debugLog(`Starting to send ${totalFiles} files to Telegram`);
-                
-                // Create a progress toast
+                const batchSize = 5;
+                debugLog(`Starting to send ${totalFiles} files to Telegram in batches of ${batchSize}`);
                 const progressToast = document.createElement('div');
                 progressToast.className = 'toast warning';
                 progressToast.innerHTML = `
@@ -1727,58 +1648,29 @@
                     </div>
                 `;
                 toastContainer.appendChild(progressToast);
-                
-                // Process files in parallel for faster upload
-                const batchSize = 3; // Process 3 files at a time
                 const batches = [];
-                
-                // Split files into batches
                 for (let i = 0; i < validFiles.length; i += batchSize) {
                     batches.push(validFiles.slice(i, i + batchSize));
                 }
-                
-                // Process each batch
                 for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
                     const batch = batches[batchIndex];
-                    
-                    // Process all files in the batch in parallel
-                    const batchPromises = batch.map(async (file) => {
-                        try {
-                            await sendFileToTelegram(file, telegramUserId);
-                            succeeded++;
-                            debugLog(`Successfully sent file: ${file.name}`);
-                            return { success: true, file: file.name };
-                        } catch (error) {
-                            debugLog(`Failed to send ${file.name}: ${error.message}`);
-                            return { success: false, file: file.name, error: error.message };
-                        }
-                    });
-                    
-                    // Wait for all files in the batch to complete
+                    const batchPromises = batch.map(file => sendFileToTelegram(file, telegramUserId));
                     const batchResults = await Promise.all(batchPromises);
-                    
-                    // Update progress
+                    succeeded += batchResults.filter(result => result.success).length;
                     const processedFiles = Math.min((batchIndex + 1) * batchSize, totalFiles);
                     const progress = Math.round((processedFiles / totalFiles) * 100);
-                    
                     progressToast.querySelector('.progress-bar').style.width = `${progress}%`;
                     progressToast.querySelector('.percentage').textContent = `${progress}%`;
                     progressToast.querySelector('.file-progress span:first-child').textContent = 
                         `Processing batch ${batchIndex + 1}/${batches.length} (${processedFiles}/${totalFiles} files)`;
-                    
-                    // Log any failures in this batch
                     batchResults.forEach(result => {
                         if (!result.success) {
                             showToast(`Failed to send ${result.file}: ${result.error}`, 'error');
                         }
                     });
                 }
-                
-                // Remove progress toast
                 setTimeout(() => progressToast.remove(), 2000);
-                
                 debugLog(`Finished sending files. Succeeded: ${succeeded}/${totalFiles}`);
-                
                 if (succeeded === totalFiles) {
                     showToast(`${succeeded} files sent to Telegram`, 'success');
                 } else {
@@ -1788,44 +1680,37 @@
                 console.error('Telegram send error:', error);
                 showToast(`Failed to send files: ${error.message}`, 'error');
             } finally {
-                updateActionButton();
+                actionBtn.innerHTML = '<i class="fab fa-telegram"></i> Send to Telegram';
                 actionBtn.disabled = false;
-                
                 document.querySelectorAll('.file-checkbox').forEach(cb => cb.checked = false);
                 document.querySelectorAll('.file-row').forEach(row => row.classList.remove('selected'));
                 updateSelectedCount();
             }
         }
-        
+
         // Download selected files as ZIP
         async function downloadSelectedFiles() {
             const validFiles = selectedFiles.filter(checkbox => {
                 const row = checkbox.closest('.file-row');
                 return !row.querySelector('.file-warning');
             });
-            
             if (validFiles.length === 0) {
                 showToast('No valid files selected', 'error');
                 return;
             }
-            
             actionBtn.innerHTML = '<span class="loading"></span> Preparing...';
             actionBtn.disabled = true;
             confirmationModal.classList.remove('active');
             showLoading(true);
-            
             try {
                 const zip = new JSZip();
-                
                 for (const checkbox of validFiles) {
                     const fileName = checkbox.dataset.name;
                     const fileUrl = checkbox.dataset.url;
-                    
                     try {
                         debugLog(`Downloading file for ZIP: ${fileName}`);
                         const response = await fetch(fileUrl);
                         if (!response.ok) throw new Error(`Failed to download ${fileName}`);
-                        
                         const blob = await response.blob();
                         zip.file(fileName, blob);
                     } catch (error) {
@@ -1833,10 +1718,8 @@
                         showToast(`Failed to download ${fileName}`, 'error');
                     }
                 }
-                
                 debugLog(`Creating ZIP file with ${validFiles.length} files`);
                 const content = await zip.generateAsync({type: "blob"});
-                
                 const url = URL.createObjectURL(content);
                 const a = document.createElement('a');
                 a.href = url;
@@ -1845,7 +1728,6 @@
                 a.click();
                 document.body.removeChild(a);
                 URL.revokeObjectURL(url);
-                
                 showToast(`${validFiles.length} files downloaded as ZIP`, 'success');
             } catch (error) {
                 console.error('ZIP creation error:', error);
@@ -1854,20 +1736,17 @@
                 showLoading(false);
                 updateActionButton();
                 actionBtn.disabled = false;
-                
                 document.querySelectorAll('.file-checkbox').forEach(cb => cb.checked = false);
                 document.querySelectorAll('.file-row').forEach(row => row.classList.remove('selected'));
                 updateSelectedCount();
             }
         }
-        
+
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
             debugLog('Application initialized with Google Drive integration');
             initTheme();
             initTelegram();
-            
-            // Check API key before fetching drive structure
             if (checkApiKey()) {
                 fetchDriveStructure();
             } else {
@@ -1875,7 +1754,6 @@
                 retrySection.style.display = 'block';
                 debugInfo.style.display = 'block';
             }
-            
             searchBtn.addEventListener('click', fetchFiles);
             selectAllBtn.addEventListener('click', toggleSelectAll);
             actionBtn.addEventListener('click', showConfirmationModal);
@@ -1892,7 +1770,6 @@
                 previewModal.classList.remove('active');
                 previewIframe.src = '';
             });
-            
             setTimeout(() => {
                 showToast('Welcome to Academic Resource Hub! Select your preferences to find course files.', 'success');
             }, 1000);
