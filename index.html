@@ -9,7 +9,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        /* Styles remain unchanged from your original design */
+        /* Styles remain the same as original */
         :root {
             --primary-color: #4361ee;
             --secondary-color: #3a0ca3;
@@ -33,7 +33,6 @@
             --glass-bg: rgba(255, 255, 255, 0.2);
             --glass-border: rgba(255, 255, 255, 0.3);
             --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
-            --youtube-color: #FF0000;
         }
         .dark-theme {
             --primary-color: #4895ef;
@@ -334,10 +333,6 @@
             background: rgba(67, 97, 238, 0.1);
             color: var(--primary-color);
         }
-        .file-icon.youtube {
-            background: rgba(255, 0, 0, 0.1);
-            color: var(--youtube-color);
-        }
         .file-info {
             overflow: hidden;
         }
@@ -392,16 +387,9 @@
             text-decoration: none;
             background: rgba(67, 97, 238, 0.1);
         }
-        .file-actions a.youtube, .file-actions button.youtube {
-            color: var(--youtube-color);
-            background: rgba(255, 0, 0, 0.1);
-        }
         .file-actions a:hover, .file-actions button:hover {
             background: rgba(67, 97, 238, 0.2);
             transform: scale(1.1);
-        }
-        .file-actions a.youtube:hover, .file-actions button.youtube:hover {
-            background: rgba(255, 0, 0, 0.2);
         }
         .checkbox-container {
             display: flex;
@@ -840,91 +828,6 @@
             font-weight: 600;
             color: var(--primary-color);
         }
-        .youtube-resources {
-            margin-top: 20px;
-            padding: 15px;
-            background: rgba(255, 0, 0, 0.05);
-            border-radius: 12px;
-            border: 1px solid rgba(255, 0, 0, 0.1);
-        }
-        .youtube-resources h3 {
-            color: var(--youtube-color);
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .youtube-list {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-        .youtube-item {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            padding: 12px;
-            background: var(--file-row-bg);
-            border-radius: 10px;
-            transition: var(--transition);
-        }
-        .youtube-item:hover {
-            background: var(--file-row-hover);
-            transform: translateY(-2px);
-        }
-        .youtube-thumbnail {
-            width: 80px;
-            height: 45px;
-            border-radius: 6px;
-            background-size: cover;
-            background-position: center;
-            position: relative;
-        }
-        .youtube-thumbnail::after {
-            content: '\f04b';
-            font-family: 'Font Awesome 5 Free';
-            font-weight: 900;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: white;
-            font-size: 1.2rem;
-            text-shadow: 0 1px 3px rgba(0,0,0,0.5);
-        }
-        .youtube-info {
-            flex: 1;
-        }
-        .youtube-title {
-            font-weight: 600;
-            margin-bottom: 5px;
-            color: var(--text-color);
-        }
-        .youtube-type {
-            font-size: 0.85rem;
-            color: var(--light-text);
-        }
-        .youtube-actions {
-            display: flex;
-            gap: 8px;
-        }
-        .youtube-actions button {
-            background: none;
-            border: none;
-            color: var(--youtube-color);
-            font-size: 1.2rem;
-            cursor: pointer;
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: rgba(255, 0, 0, 0.1);
-        }
-        .youtube-actions button:hover {
-            background: rgba(255, 0, 0, 0.2);
-        }
     </style>
 </head>
 <body>
@@ -1034,13 +937,6 @@
                         </div>
                     </div>
                 </div>
-                
-                <div class="youtube-resources" id="youtubeResources" style="display: none;">
-                    <h3><i class="fab fa-youtube"></i> Video Resources</h3>
-                    <div class="youtube-list" id="youtubeList">
-                        <!-- YouTube resources will be loaded here -->
-                    </div>
-                </div>
             </section>
         </main>
     </div>
@@ -1076,17 +972,6 @@
             </div>
         </div>
     </div>
-    <div class="modal-overlay" id="youtubeModal">
-        <div class="modal preview-modal">
-            <div class="modal-header">
-                <h3 class="modal-title"><i class="fab fa-youtube"></i> Video Preview</h3>
-                <button class="close-modal" id="closeYoutube">&times;</button>
-            </div>
-            <div class="modal-body">
-                <iframe id="youtubeIframe" src="" frameborder="0" allowfullscreen></iframe>
-            </div>
-        </div>
-    </div>
     <script>
         // DOM Elements
         const themeToggle = document.getElementById('themeToggle');
@@ -1119,46 +1004,20 @@
         const retryBtn = document.getElementById('retryBtn');
         const debugInfo = document.getElementById('debugInfo');
         const debugContent = document.getElementById('debugContent');
-        const youtubeResources = document.getElementById('youtubeResources');
-        const youtubeList = document.getElementById('youtubeList');
-        const youtubeModal = document.getElementById('youtubeModal');
-        const closeYoutube = document.getElementById('closeYoutube');
-        const youtubeIframe = document.getElementById('youtubeIframe');
         
         // Configuration
-        const REPO_OWNER = '11UCRES';
-        const REPO_NAME = 'cse';
+        const DRIVE_API_KEY = 'AIzaSyDF0qDqon7LUpPxM3S3XOGmiXqHY9BG5_4'; // Replace with your actual Google Drive API key
+        const DRIVE_FOLDER_ID = '1GtKc243UyP_pWvmFKbxwTRSy_PvQ7rsF'; // Root folder ID for academic resources
         const BOT_TOKEN = '7954499196:AAF7YiojzLccNyFe-wHDBueJMLVnal-9WhM';
-        const GITHUB_TOKEN = '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';
         let telegramUserId = null;
         let isTelegramConnected = false;
         let selectedFiles = [];
-        let useAuth = false;
         
-        // YouTube resources JSON configuration
-        const youtubeResourcesConfig = {
-            "Semester1/Mid/CSE-1121": [
-                {
-                    "title": "Programming Fundamentals Complete Course",
-                    "type": "Playlist",
-                    "url": "https://www.youtube.com/playlist?list=PLdo5W4Nhv31bbKJzrsKfMpo_7cQYQsT9m",
-                    "thumbnail": "https://i.ytimg.com/vi/8jLOx1hD3_o/default.jpg"
-                },
-                {
-                    "title": "Introduction to C Programming",
-                    "type": "Video",
-                    "url": "https://www.youtube.com/watch?v=KJgsSFOSQv0",
-                    "thumbnail": "https://i.ytimg.com/vi/KJgsSFOSQv0/default.jpg"
-                }
-            ],
-            "Semester1/Mid/CSE-1121": [
-                {
-                    "title": "Cloud Computing Fundamentals",
-                    "type": "Playlist",
-                    "url": "https://www.youtube.com/playlist?list=PLhwr3LFyJInRxc9X2I2Z3uN0p2rE1p7s",
-                    "thumbnail": "https://i.ytimg.com/vi/2LaWA3nHxS4/default.jpg"
-                }
-            ]
+        // Folder structure mapping
+        const folderStructure = {
+            semesters: {},
+            examTypes: {},
+            courses: {}
         };
         
         // Debug logging function
@@ -1241,121 +1100,32 @@
             updateSelectedCount();
         }
         
-        // Enhanced GitHub API request function with fallback authentication
-        async function fetchGitHubAPI(endpoint) {
-            const url = `https://api.github.com${endpoint}`;
-            const headers = {
-                'Accept': 'application/vnd.github.v3+json'
-            };
-            
-            // First, try without authentication
-            debugLog(`Trying unauthenticated request to: ${url}`);
-            
-            try {
-                const response = await fetch(url, { headers });
-                debugLog(`No-auth response status: ${response.status} ${response.statusText}`);
-                
-                // Handle rate limiting
-                if (response.status === 403) {
-                    const rateLimitRemaining = response.headers.get('X-RateLimit-Remaining');
-                    const rateLimitReset = response.headers.get('X-RateLimit-Reset');
-                    
-                    debugLog(`Rate limit remaining: ${rateLimitRemaining}`);
-                    debugLog(`Rate limit reset: ${new Date(parseInt(rateLimitReset) * 1000).toLocaleString()}`);
-                    
-                    if (rateLimitRemaining === '0') {
-                        // Rate limit exceeded, try with authentication if token is available
-                        if (GITHUB_TOKEN) {
-                            debugLog(`Rate limit exceeded, trying with authentication`);
-                            return fetchWithAuth(url, headers);
-                        } else {
-                            const resetTime = new Date(parseInt(rateLimitReset) * 1000);
-                            throw new Error(`GitHub API rate limit exceeded. Try again after ${resetTime.toLocaleTimeString()}`);
-                        }
-                    }
-                }
-                
-                if (!response.ok) {
-                    let errorData;
-                    try {
-                        errorData = await response.json();
-                        debugLog(`Error response: ${JSON.stringify(errorData)}`);
-                    } catch (e) {
-                        debugLog(`Failed to parse error response: ${e.message}`);
-                        errorData = { message: response.statusText };
-                    }
-                    throw new Error(errorData.message || `GitHub API error: ${response.status} ${response.statusText}`);
-                }
-                
-                const data = await response.json();
-                debugLog(`Successfully fetched data without auth: ${Array.isArray(data) ? `${data.length} items` : 'object'}`);
-                useAuth = false;
-                return data;
-            } catch (error) {
-                // If we haven't tried with auth yet and the error is rate limiting, try with auth
-                if (error.message.includes('rate limit exceeded') && GITHUB_TOKEN) {
-                    debugLog(`Rate limit exceeded, trying with authentication`);
-                    return fetchWithAuth(url, headers);
-                }
-                throw error;
-            }
+        // Function to validate API key format
+        function isValidApiKey(key) {
+            return key && key.length > 20 && key !== 'YOUR_ACTUAL_API_KEY_HERE';
         }
         
-        // Helper function to make authenticated requests
-        async function fetchWithAuth(url, headers) {
-            headers['Authorization'] = `token ${GITHUB_TOKEN}`;
-            debugLog(`Trying authenticated request to: ${url}`);
-            
-            try {
-                const response = await fetch(url, { headers });
-                debugLog(`Auth response status: ${response.status} ${response.statusText}`);
-                
-                // Handle rate limiting
-                if (response.status === 403) {
-                    const rateLimitRemaining = response.headers.get('X-RateLimit-Remaining');
-                    const rateLimitReset = response.headers.get('X-RateLimit-Reset');
-                    
-                    debugLog(`Rate limit remaining: ${rateLimitRemaining}`);
-                    debugLog(`Rate limit reset: ${new Date(parseInt(rateLimitReset) * 1000).toLocaleString()}`);
-                    
-                    if (rateLimitRemaining === '0') {
-                        const resetTime = new Date(parseInt(rateLimitReset) * 1000);
-                        throw new Error(`GitHub API rate limit exceeded. Try again after ${resetTime.toLocaleTimeString()}`);
-                    }
-                }
-                
-                // Handle bad credentials
-                if (response.status === 401) {
-                    throw new Error('Bad credentials');
-                }
-                
-                if (!response.ok) {
-                    let errorData;
-                    try {
-                        errorData = await response.json();
-                        debugLog(`Error response: ${JSON.stringify(errorData)}`);
-                    } catch (e) {
-                        debugLog(`Failed to parse error response: ${e.message}`);
-                        errorData = { message: response.statusText };
-                    }
-                    throw new Error(errorData.message || `GitHub API error: ${response.status} ${response.statusText}`);
-                }
-                
-                const data = await response.json();
-                debugLog(`Successfully fetched data with auth: ${Array.isArray(data) ? `${data.length} items` : 'object'}`);
-                useAuth = true;
-                return data;
-            } catch (error) {
-                if (error.message === 'Bad credentials') {
-                    debugLog(`Bad credentials, cannot use authentication`);
-                    throw new Error('GitHub token is invalid or has been revoked');
-                }
-                throw error;
+        // Function to check if API key is valid
+        function checkApiKey() {
+            if (!isValidApiKey(DRIVE_API_KEY)) {
+                showToast('Invalid Google Drive API key. Please replace with a valid key.', 'error');
+                debugInfo.style.display = 'block';
+                debugContent.innerHTML = `
+                    <div>Error: Invalid Google Drive API Key</div>
+                    <div>To fix this issue:</div>
+                    <div>1. Go to Google Cloud Console</div>
+                    <div>2. Create a project or select existing one</div>
+                    <div>3. Enable Google Drive API</div>
+                    <div>4. Create API credentials</div>
+                    <div>5. Replace the DRIVE_API_KEY value with your actual key</div>
+                `;
+                return false;
             }
+            return true;
         }
         
-        // Fetch folder structure from GitHub with better error handling
-        async function fetchGitHubStructure() {
+        // Fetch folder structure from Google Drive
+        async function fetchDriveStructure() {
             showLoading(true);
             placeholderText.textContent = 'Loading repository structure...';
             retrySection.style.display = 'none';
@@ -1363,21 +1133,24 @@
             debugContent.innerHTML = '';
             
             try {
-                debugLog(`Starting to fetch repository structure for ${REPO_OWNER}/${REPO_NAME}`);
+                debugLog(`Starting to fetch folder structure from Google Drive (ID: ${DRIVE_FOLDER_ID})`);
                 
-                // First check if repository exists
-                debugLog(`Checking if repository exists...`);
-                const repoData = await fetchGitHubAPI(`/repos/${REPO_OWNER}/${REPO_NAME}`);
-                debugLog(`Repository exists: ${repoData.name}, private: ${repoData.private}`);
+                // Check API key first
+                if (!checkApiKey()) {
+                    throw new Error('Invalid API key');
+                }
                 
-                // Then fetch repository contents
-                debugLog(`Fetching repository contents...`);
-                const data = await fetchGitHubAPI(`/repos/${REPO_OWNER}/${REPO_NAME}/contents/`);
+                // Fetch top-level folders (semesters)
+                const semesters = await fetchDriveFolders(DRIVE_FOLDER_ID);
+                debugLog(`Found ${semesters.length} semesters`);
                 
-                // Extract semesters (top-level folders)
-                const semesters = data.filter(item => item.type === 'dir').map(item => item.name);
-                debugLog(`Found semesters: ${semesters.join(', ')}`);
-                populateSelect(semesterSelect, semesters);
+                // Populate semester dropdown
+                populateSelect(semesterSelect, semesters.map(folder => folder.name));
+                
+                // Store folder IDs for later use
+                semesters.forEach(folder => {
+                    folderStructure.semesters[folder.name] = folder.id;
+                });
                 
                 // When semester is selected, fetch exam types
                 semesterSelect.addEventListener('change', async () => {
@@ -1385,12 +1158,19 @@
                     
                     showLoading(true);
                     try {
-                        const semesterPath = `${semesterSelect.value}/`;
-                        debugLog(`Fetching exam types for semester: ${semesterSelect.value}`);
-                        const examData = await fetchGitHubAPI(`/repos/${REPO_OWNER}/${REPO_NAME}/contents/${semesterPath}`);
-                        const examTypes = examData.filter(item => item.type === 'dir').map(item => item.name);
-                        debugLog(`Found exam types: ${examTypes.join(', ')}`);
-                        populateSelect(examTypeSelect, examTypes);
+                        const semesterId = folderStructure.semesters[semesterSelect.value];
+                        debugLog(`Fetching exam types for semester: ${semesterSelect.value} (ID: ${semesterId})`);
+                        const examTypes = await fetchDriveFolders(semesterId);
+                        debugLog(`Found ${examTypes.length} exam types`);
+                        
+                        // Populate exam type dropdown
+                        populateSelect(examTypeSelect, examTypes.map(folder => folder.name));
+                        
+                        // Store folder IDs
+                        examTypes.forEach(folder => {
+                            folderStructure.examTypes[folder.name] = folder.id;
+                        });
+                        
                         // Reset course dropdown
                         courseSelect.innerHTML = '<option value="">Select Course</option>';
                     } catch (error) {
@@ -1407,12 +1187,18 @@
                     
                     showLoading(true);
                     try {
-                        const coursePath = `${semesterSelect.value}/${examTypeSelect.value}/`;
-                        debugLog(`Fetching courses for ${coursePath}`);
-                        const courseData = await fetchGitHubAPI(`/repos/${REPO_OWNER}/${REPO_NAME}/contents/${coursePath}`);
-                        const courses = courseData.filter(item => item.type === 'dir').map(item => item.name);
-                        debugLog(`Found courses: ${courses.join(', ')}`);
-                        populateSelect(courseSelect, courses);
+                        const examTypeId = folderStructure.examTypes[examTypeSelect.value];
+                        debugLog(`Fetching courses for exam type: ${examTypeSelect.value} (ID: ${examTypeId})`);
+                        const courses = await fetchDriveFolders(examTypeId);
+                        debugLog(`Found ${courses.length} courses`);
+                        
+                        // Populate course dropdown
+                        populateSelect(courseSelect, courses.map(folder => folder.name));
+                        
+                        // Store folder IDs
+                        courses.forEach(folder => {
+                            folderStructure.courses[folder.name] = folder.id;
+                        });
                     } catch (error) {
                         debugLog(`Error fetching courses: ${error.message}`);
                         showToast(`Error fetching courses: ${error.message}`, 'error');
@@ -1424,20 +1210,10 @@
                 showToast('Repository structure loaded successfully', 'success');
                 placeholderText.textContent = 'Select semester, exam type and course to view available resources';
             } catch (error) {
-                console.error('Failed to fetch repository structure:', error);
-                debugLog(`Failed to fetch repository structure: ${error.message}`);
-                
-                if (error.message.includes('rate limit exceeded')) {
-                    showToast('GitHub API rate limit exceeded. Please try again later.', 'error');
-                    placeholderText.textContent = 'GitHub API rate limit exceeded. Please try again later.';
-                } else if (error.message.includes('Bad credentials') || error.message.includes('401')) {
-                    showToast('GitHub token is invalid or has been revoked.', 'error');
-                    placeholderText.textContent = 'GitHub token is invalid or has been revoked.';
-                } else {
-                    showToast(`Failed to load repository: ${error.message}`, 'error');
-                    placeholderText.textContent = `Failed to load repository: ${error.message}`;
-                }
-                
+                console.error('Failed to fetch folder structure:', error);
+                debugLog(`Failed to fetch folder structure: ${error.message}`);
+                showToast(`Failed to load repository: ${error.message}`, 'error');
+                placeholderText.textContent = `Failed to load repository: ${error.message}`;
                 retrySection.style.display = 'block';
                 debugInfo.style.display = 'block';
             } finally {
@@ -1445,9 +1221,43 @@
             }
         }
         
+        // Fetch folders from Google Drive
+        async function fetchDriveFolders(parentId) {
+            // Ensure proper URL encoding
+            const encodedParentId = encodeURIComponent(parentId);
+            const url = `https://www.googleapis.com/drive/v3/files?q='${encodedParentId}'+in+parents+and+mimeType='application/vnd.google-apps.folder'&key=${DRIVE_API_KEY}`;
+            
+            debugLog(`Fetching folders with URL: ${url.substring(0, 100)}...`);
+            
+            try {
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    debugLog(`Drive API error response: ${JSON.stringify(errorData)}`);
+                    throw new Error(`Drive API error: ${response.status} ${response.statusText} - ${errorData.error.message || ''}`);
+                }
+                
+                const data = await response.json();
+                debugLog(`Drive API response: Found ${data.files ? data.files.length : 0} folders`);
+                
+                if (!data.files || data.files.length === 0) {
+                    debugLog(`No folders found in parent: ${parentId}`);
+                }
+                
+                return data.files.map(folder => ({
+                    id: folder.id,
+                    name: folder.name
+                }));
+            } catch (error) {
+                debugLog(`Error in fetchDriveFolders: ${error.message}`);
+                throw error;
+            }
+        }
+        
         // Retry button handler
         retryBtn.addEventListener('click', () => {
-            fetchGitHubStructure();
+            fetchDriveStructure();
         });
         
         // Populate a select dropdown with options
@@ -1473,16 +1283,16 @@
             
             showLoading(true);
             try {
-                const path = `${semesterSelect.value}/${examTypeSelect.value}/${courseSelect.value}/`;
-                debugLog(`Fetching files for path: ${path}`);
-                const data = await fetchGitHubAPI(`/repos/${REPO_OWNER}/${REPO_NAME}/contents/${path}`);
-                const files = data.filter(item => item.type === 'file');
+                const courseId = folderStructure.courses[courseSelect.value];
+                if (!courseId) {
+                    throw new Error('Course folder not found');
+                }
+                
+                debugLog(`Fetching files for course: ${courseSelect.value} (ID: ${courseId})`);
+                const files = await fetchDriveFiles(courseId);
                 debugLog(`Found ${files.length} files`);
                 
-                displayFiles(files, path);
-                
-                // Load YouTube resources for this course
-                loadYouTubeResources();
+                displayFiles(files);
                 
                 showToast(`Found ${files.length} resources`, 'success');
                 
@@ -1494,79 +1304,45 @@
             }
         }
         
-        // Load YouTube resources for the selected course
-        function loadYouTubeResources() {
-            const coursePath = `${semesterSelect.value}/${examTypeSelect.value}/${courseSelect.value}`;
-            const resources = youtubeResourcesConfig[coursePath];
+        // Fetch files from Google Drive folder
+        async function fetchDriveFiles(folderId) {
+            // Ensure proper URL encoding
+            const encodedFolderId = encodeURIComponent(folderId);
+            const url = `https://www.googleapis.com/drive/v3/files?q='${encodedFolderId}'+in+parents+and+trashed+=+false&key=${DRIVE_API_KEY}`;
             
-            if (resources && resources.length > 0) {
-                youtubeResources.style.display = 'block';
-                youtubeList.innerHTML = '';
+            debugLog(`Fetching files with URL: ${url.substring(0, 100)}...`);
+            
+            try {
+                const response = await fetch(url);
                 
-                resources.forEach(resource => {
-                    const youtubeItem = document.createElement('div');
-                    youtubeItem.className = 'youtube-item';
-                    
-                    const videoId = extractVideoId(resource.url);
-                    const thumbnailUrl = videoId ? 
-                        `https://img.youtube.com/vi/${videoId}/default.jpg` : 
-                        resource.thumbnail || 'https://i.ytimg.com/vi/default.jpg';
-                    
-                    youtubeItem.innerHTML = `
-                        <div class="youtube-thumbnail" style="background-image: url('${thumbnailUrl}')"></div>
-                        <div class="youtube-info">
-                            <div class="youtube-title">${resource.title}</div>
-                            <div class="youtube-type">${resource.type}</div>
-                        </div>
-                        <div class="youtube-actions">
-                            <button class="play-btn" data-url="${resource.url}" title="Play">
-                                <i class="fas fa-play"></i>
-                            </button>
-                            <button class="share-btn" data-url="${resource.url}" title="Share">
-                                <i class="fas fa-share-alt"></i>
-                            </button>
-                        </div>
-                    `;
-                    
-                    youtubeList.appendChild(youtubeItem);
-                });
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    debugLog(`Drive API error response: ${JSON.stringify(errorData)}`);
+                    throw new Error(`Drive API error: ${response.status} ${response.statusText} - ${errorData.error.message || ''}`);
+                }
                 
-                // Add event listeners to YouTube buttons
-                document.querySelectorAll('.play-btn').forEach(btn => {
-                    btn.addEventListener('click', function() {
-                        const url = this.dataset.url;
-                        showYouTubeVideo(url);
-                    });
-                });
+                const data = await response.json();
+                debugLog(`Drive API response: Found ${data.files ? data.files.length : 0} files`);
                 
-                document.querySelectorAll('.share-btn').forEach(btn => {
-                    btn.addEventListener('click', function() {
-                        const url = this.dataset.url;
-                        if (navigator.share) {
-                            navigator.share({
-                                title: 'YouTube Resource',
-                                url: url
-                            });
-                        } else {
-                            navigator.clipboard.writeText(url);
-                            showToast('Link copied to clipboard', 'success');
-                        }
-                    });
-                });
-            } else {
-                youtubeResources.style.display = 'none';
+                if (!data.files || data.files.length === 0) {
+                    debugLog(`No files found in folder: ${folderId}`);
+                }
+                
+                return data.files.map(file => ({
+                    id: file.id,
+                    name: file.name,
+                    size: file.size ? parseInt(file.size) : 0,
+                    webViewLink: file.webViewLink,
+                    webContentLink: `https://www.googleapis.com/drive/v3/files/${file.id}?alt=media&key=${DRIVE_API_KEY}`
+                }));
+            } catch (error) {
+                debugLog(`Error in fetchDriveFiles: ${error.message}`);
+                throw error;
             }
         }
         
-        // Extract video ID from YouTube URL
-        function extractVideoId(url) {
-            const regex = /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/;
-            const match = url.match(regex);
-            return match ? match[1] : null;
-        }
-        
         // Display files in the UI
-        function displayFiles(files, path) {
+        function displayFiles(files) {
             if (files.length === 0) {
                 fileList.innerHTML = `
                     <div class="placeholder">
@@ -1581,7 +1357,6 @@
             files.forEach(file => {
                 const isLarge = file.size > 20 * 1024 * 1024; // 20MB
                 const fileSize = formatFileSize(file.size);
-                const fileUrl = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/main/${path}${encodeURIComponent(file.name)}`;
                 
                 const fileType = getFileType(file.name);
                 const iconClass = getFileIconClass(fileType);
@@ -1592,7 +1367,8 @@
                 fileRow.className = 'file-row';
                 fileRow.innerHTML = `
                     <div class="checkbox-container">
-                        <input type="checkbox" class="file-checkbox" id="file-${file.sha}" data-url="${fileUrl}" data-name="${file.name}" ${isLarge ? 'disabled' : ''}>
+                        <input type="checkbox" class="file-checkbox" id="file-${file.id}" 
+                            data-url="${file.webContentLink}" data-name="${file.name}" ${isLarge ? 'disabled' : ''}>
                     </div>
                     <div class="file-icon">
                         <i class="${iconClass}"></i>
@@ -1606,10 +1382,10 @@
                     ${isLarge ? '<div class="file-warning"><i class="fas fa-exclamation-triangle"></i> Large file</div>' : ''}
                     ${showActions ? `
                     <div class="file-actions">
-                        <a href="${fileUrl}" class="download-btn" title="Download" download>
+                        <a href="${file.webContentLink}" class="download-btn" title="Download" download="${file.name}">
                             <i class="fas fa-download"></i>
                         </a>
-                        <button class="preview-btn" data-url="${fileUrl}" data-name="${file.name}" title="Preview">
+                        <button class="preview-btn" data-url="${file.webViewLink}" data-name="${file.name}" title="Preview">
                             <i class="fas fa-eye"></i>
                         </button>
                     </div>
@@ -1684,10 +1460,11 @@
         
         // Format file size in human-readable format
         function formatFileSize(bytes) {
-            if (bytes < 1024) return bytes + ' B';
-            else if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
-            else if (bytes < 1073741824) return (bytes / 1048576).toFixed(1) + ' MB';
-            else return (bytes / 1073741824).toFixed(1) + ' GB';
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
         }
         
         // Toast notification system
@@ -1780,89 +1557,76 @@
         // Show preview in modal
         function showPreview(url, fileName) {
             const fileType = getFileType(fileName);
-            let previewUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`;
-            if (fileType === 'img') {
-                previewUrl = url;
+            let previewUrl = url;
+            
+            // Google Drive previews work best for PDFs and images
+            if (fileType === 'pdf') {
+                previewUrl = `https://drive.google.com/viewerng/viewer?embedded=true&url=${encodeURIComponent(url)}`;
             }
+            
             previewIframe.src = previewUrl;
             previewModal.classList.add('active');
         }
         
-        // Show YouTube video in modal
-        function showYouTubeVideo(url) {
-            const videoId = extractVideoId(url);
-            if (videoId) {
-                youtubeIframe.src = `https://www.youtube.com/embed/${videoId}`;
-                youtubeModal.classList.add('active');
-            } else {
-                window.open(url, '_blank');
-            }
-        }
-        
-        // Send a file to Telegram via bot API using direct URL method
+        // Send a file to Telegram via bot API
         async function sendFileToTelegram(file, userId, progressCallback) {
             const apiUrl = `https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`;
             
             try {
                 debugLog(`Sending file to Telegram: ${file.name}`);
                 
-                const params = new URLSearchParams({
-                    chat_id: userId,
-                    document: file.url,
-                    caption: `Requested from : @iiuccseresourcebot`
-                    //caption: `File: ${file.name}`
-                });
+                // We'll use the direct download URL from Google Drive
+                const formData = new FormData();
+                formData.append('chat_id', userId);
+                formData.append('caption', `File: ${file.name}`);
                 
-                const response = await fetch(`${apiUrl}?${params}`);
-                const result = await response.json();
-                
-                if (!result.ok) {
-                    let errorMsg = result.description || 'Telegram API error';
-                    if (result.error_code === 403) {
-                        errorMsg = 'Forbidden: Please start the bot by sending /start to the bot first.';
+                // For small files, we can download and send as FormData
+                // For large files, we need to send via URL
+                if (file.size < 20 * 1024 * 1024) {
+                    // Download file and send as blob
+                    const response = await fetch(file.url);
+                    const blob = await response.blob();
+                    formData.append('document', blob, file.name);
+                    
+                    const uploadResponse = await fetch(apiUrl, {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    const result = await uploadResponse.json();
+                    if (!result.ok) {
+                        throw new Error(result.description || 'Telegram API error');
                     }
-                    debugLog(`Telegram API error: ${errorMsg}`);
-                    throw new Error(errorMsg);
+                } else {
+                    // For large files, send via URL
+                    formData.append('document', file.url);
+                    
+                    const uploadResponse = await fetch(apiUrl, {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    const result = await uploadResponse.json();
+                    if (!result.ok) {
+                        throw new Error(result.description || 'Telegram API error');
+                    }
                 }
                 
                 debugLog(`Successfully sent file: ${file.name}`);
-                return result;
+                return true;
             } catch (error) {
                 debugLog(`Error sending ${file.name}: ${error.message}`);
                 throw new Error(`Failed to send ${file.name}: ${error.message}`);
             }
         }
         
-        // Update progress toast
-        function updateProgress(toastElement, current, total, fileName) {
-            const progressText = toastElement.querySelector('.toast-content p');
-            progressText.innerHTML = `Sending: <strong>${fileName}</strong><br>Progress: ${current}/${total} files`;
-            
-            // Update progress bar
-            const progressPercent = Math.round((current / total) * 100);
-            const progressBar = toastElement.querySelector('.progress-bar');
-            if (progressBar) {
-                progressBar.style.width = `${progressPercent}%`;
-            }
-            
-            // Update percentage
-            const percentageElement = toastElement.querySelector('.percentage');
-            if (percentageElement) {
-                percentageElement.textContent = `${progressPercent}%`;
-            }
-        }
-        
-        // Send files to Telegram with optimized method
+        // Send files to Telegram
         async function sendToTelegram() {
-            const validFiles = selectedFiles.filter(checkbox => {
-                const row = checkbox.closest('.file-row');
-                return !row.querySelector('.file-warning');
-            });
-            
-            const filesToSend = validFiles.map(checkbox => {
+            const validFiles = selectedFiles.map(checkbox => {
                 return {
                     name: checkbox.dataset.name,
-                    url: checkbox.dataset.url
+                    url: checkbox.dataset.url,
+                    size: 0 // Size not critical for this operation
                 };
             });
             
@@ -1876,8 +1640,7 @@
                 }
                 
                 let succeeded = 0;
-                let failed = 0;
-                const totalFiles = filesToSend.length;
+                const totalFiles = validFiles.length;
                 
                 debugLog(`Starting to send ${totalFiles} files to Telegram`);
                 
@@ -1900,52 +1663,35 @@
                 `;
                 toastContainer.appendChild(progressToast);
                 
-                // Process files with controlled concurrency
-                const maxConcurrent = 5; // Increased concurrency for faster sending
-                const processing = [];
-                
-                for (let i = 0; i < filesToSend.length; i++) {
-                    const file = filesToSend[i];
+                for (let i = 0; i < validFiles.length; i++) {
+                    const file = validFiles[i];
                     
                     // Update progress
-                    updateProgress(progressToast, succeeded + failed + 1, totalFiles, file.name);
+                    const progress = Math.round(((i + 1) / totalFiles) * 100);
+                    progressToast.querySelector('.progress-bar').style.width = `${progress}%`;
+                    progressToast.querySelector('.percentage').textContent = `${progress}%`;
+                    progressToast.querySelector('.file-progress span:first-child').textContent = `Sending: ${file.name}`;
                     
-                    // Wait if we're at max concurrency
-                    if (processing.length >= maxConcurrent) {
-                        await Promise.race(processing);
+                    try {
+                        await sendFileToTelegram(file, telegramUserId);
+                        succeeded++;
+                    } catch (error) {
+                        debugLog(error.message);
                     }
                     
-                    const promise = sendFileToTelegram(file, telegramUserId)
-                        .then(() => {
-                            succeeded++;
-                            updateProgress(progressToast, succeeded + failed, totalFiles, file.name);
-                        })
-                        .catch(error => {
-                            console.error(`Failed to send ${file.name}:`, error);
-                            failed++;
-                            updateProgress(progressToast, succeeded + failed, totalFiles, file.name);
-                        })
-                        .finally(() => {
-                            // Remove this promise from processing array
-                            const index = processing.indexOf(promise);
-                            if (index > -1) processing.splice(index, 1);
-                        });
-                    
-                    processing.push(promise);
+                    // Add a small delay between files to avoid rate limiting
+                    await new Promise(resolve => setTimeout(resolve, 500));
                 }
-                
-                // Wait for all files to finish processing
-                await Promise.allSettled(processing);
                 
                 // Remove progress toast
                 setTimeout(() => progressToast.remove(), 2000);
                 
-                debugLog(`Finished sending files. Succeeded: ${succeeded}, Failed: ${failed}`);
+                debugLog(`Finished sending files. Succeeded: ${succeeded}/${totalFiles}`);
                 
-                if (failed > 0) {
-                    showToast(`${succeeded} files sent, ${failed} failed`, 'warning');
-                } else {
+                if (succeeded === totalFiles) {
                     showToast(`${succeeded} files sent to Telegram`, 'success');
+                } else {
+                    showToast(`${succeeded} of ${totalFiles} files sent, ${totalFiles - succeeded} failed`, 'warning');
                 }
             } catch (error) {
                 console.error('Telegram send error:', error);
@@ -2026,10 +1772,18 @@
         
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
-            debugLog('Application initialized');
+            debugLog('Application initialized with Google Drive integration');
             initTheme();
             initTelegram();
-            fetchGitHubStructure();
+            
+            // Check API key before fetching drive structure
+            if (checkApiKey()) {
+                fetchDriveStructure();
+            } else {
+                placeholderText.textContent = 'Invalid Google Drive API key. Please check the debug information below.';
+                retrySection.style.display = 'block';
+                debugInfo.style.display = 'block';
+            }
             
             searchBtn.addEventListener('click', fetchFiles);
             selectAllBtn.addEventListener('click', toggleSelectAll);
@@ -2046,10 +1800,6 @@
             closePreview.addEventListener('click', () => {
                 previewModal.classList.remove('active');
                 previewIframe.src = '';
-            });
-            closeYoutube.addEventListener('click', () => {
-                youtubeModal.classList.remove('active');
-                youtubeIframe.src = '';
             });
             
             setTimeout(() => {
