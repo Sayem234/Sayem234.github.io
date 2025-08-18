@@ -1629,10 +1629,8 @@
             return match ? match[1] : '';
         }
         
-        // Send a file to Telegram via bot API - FIXED VERSION
+        // Send a file to Telegram via bot API - COMPLETELY REWRITTEN VERSION
         async function sendFileToTelegram(file, userId) {
-            const apiUrl = `https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`;
-            
             try {
                 debugLog(`Sending file to Telegram: ${file.name} (Size: ${formatFileSize(file.size)})`);
                 
@@ -1642,31 +1640,40 @@
                 }
                 
                 // Download the file from Google Drive
-                const response = await fetch(file.url);
-                if (!response.ok) {
+                const downloadResponse = await fetch(file.url);
+                if (!downloadResponse.ok) {
                     throw new Error(`Failed to download file: ${file.name}`);
                 }
                 
-                const blob = await response.blob();
+                // Get the file content as a blob
+                const blob = await downloadResponse.blob();
                 
                 // Create a FormData object
                 const formData = new FormData();
                 formData.append('chat_id', userId);
                 
                 // Create a File object with the correct filename
-                const fileObj = new File([blob], file.name, { type: blob.type });
+                // This is the key to preserving the filename
+                const fileObj = new File([blob], file.name, { type: blob.type || 'application/octet-stream' });
+                
+                // Add the file to FormData
                 formData.append('document', fileObj);
+                
+                // Add a caption with the filename
                 formData.append('caption', `File: ${file.name}`);
                 
-                // Send the request
-                const telegramResponse = await fetch(apiUrl, {
+                // Send to Telegram using the sendDocument method
+                const telegramUrl = `https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`;
+                
+                const telegramResponse = await fetch(telegramUrl, {
                     method: 'POST',
                     body: formData
                 });
                 
                 const result = await telegramResponse.json();
+                
                 if (!result.ok) {
-                    throw new Error(result.description || 'Telegram API error');
+                    throw new Error(`Telegram API error: ${result.description || 'Unknown error'}`);
                 }
                 
                 debugLog(`Successfully sent file: ${file.name}`);
@@ -1677,7 +1684,7 @@
             }
         }
         
-        // Send files to Telegram using parallel processing - FIXED VERSION
+        // Send files to Telegram using parallel processing - COMPLETELY REWRITTEN VERSION
         async function sendToTelegram() {
             // Get file data from checkboxes including size
             const validFiles = selectedFiles.map(checkbox => {
