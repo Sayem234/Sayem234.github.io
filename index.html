@@ -494,38 +494,31 @@
                 text-align: center;
                 gap: 20px;
             }
-            
             .logo {
                 flex-direction: column;
             }
-            
             .header-controls {
                 width: 100%;
                 justify-content: center;
             }
-            
             .file-row {
                 grid-template-columns: auto 1fr auto;
                 grid-template-rows: auto auto;
                 gap: 12px;
             }
-            
             .file-info {
                 grid-column: 2;
                 grid-row: 1;
             }
-            
             .file-details {
                 grid-column: 1 / span 3;
                 grid-row: 2;
             }
-            
             .file-warning {
                 grid-column: 3;
                 grid-row: 1;
                 justify-self: end;
             }
-            
             .file-actions {
                 grid-column: 3;
                 grid-row: 1;
@@ -533,31 +526,25 @@
                 align-self: start;
                 margin-top: 5px;
             }
-            
             .checkbox-container {
                 grid-row: 1;
-            perspective: none;
             }
         }
         @media (max-width: 600px) {
             .preferences-grid {
                 grid-template-columns: 1fr;
             }
-            
             .card {
                 padding: 20px;
             }
-            
             .file-row {
                 padding: 15px;
             }
-            
             .btn {
                 width: 100%;
                 justify-content: center;
                 padding: 14px;
             }
-            
             .buttons {
                 flex-direction: column;
             }
@@ -578,12 +565,10 @@
             pointer-events: none;
             transition: opacity 0.3s ease;
         }
-        
         .loading-overlay.active {
             opacity: 1;
             pointer-events: all;
         }
-        
         .loading-spinner {
             width: 70px;
             height: 70px;
@@ -592,26 +577,22 @@
             border-top-color: var(--primary-color);
             animation: spin 1s ease-in-out infinite;
         }
-        
         .placeholder {
             text-align: center;
             padding: 50px 20px;
             color: var(--light-text);
         }
-        
         .placeholder i {
             font-size: 3.5rem;
             margin-bottom: 20px;
             color: var(--primary-color);
             opacity: 0.4;
         }
-        
         .placeholder p {
             font-size: 1.2rem;
             max-width: 500px;
             margin: 0 auto;
         }
-        
         .stats {
             display: flex;
             justify-content: center;
@@ -619,7 +600,6 @@
             margin-top: 25px;
             flex-wrap: wrap;
         }
-        
         .stat-box {
             background: rgba(67, 97, 238, 0.1);
             border-radius: 12px;
@@ -627,19 +607,16 @@
             text-align: center;
             min-width: 150px;
         }
-        
         .stat-value {
             font-size: 2rem;
             font-weight: 700;
             color: var(--primary-color);
             margin-bottom: 5px;
         }
-        
         .stat-label {
             font-size: 0.9rem;
             color: var(--light-text);
         }
-        
         .telegram-connection {
             position: fixed;
             bottom: 15px;
@@ -656,11 +633,9 @@
             z-index: 100;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
         }
-        
         .telegram-connected {
             color: #2ec4b6;
         }
-        
         .telegram-disconnected {
             color: #ff9f1c;
         }
@@ -680,12 +655,10 @@
             pointer-events: none;
             transition: opacity 0.3s ease;
         }
-        
         .modal-overlay.active {
             opacity: 1;
             pointer-events: all;
         }
-        
         .modal {
             background: var(--card-bg);
             border-radius: 16px;
@@ -694,14 +667,12 @@
             width: 90%;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
         }
-        
         .modal-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 20px;
         }
-        
         .modal-title {
             color: var(--primary-color);
             font-size: 1.5rem;
@@ -709,7 +680,6 @@
             align-items: center;
             gap: 10px;
         }
-        
         .close-modal {
             background: none;
             border: none;
@@ -717,17 +687,14 @@
             cursor: pointer;
             color: var(--light-text);
         }
-        
         .modal-body {
             margin-bottom: 25px;
         }
-        
         .modal-buttons {
             display: flex;
             gap: 15px;
             justify-content: flex-end;
         }
-        
         .modal-file-list {
             max-height: 200px;
             overflow-y: auto;
@@ -736,7 +703,6 @@
             background: rgba(0, 0, 0, 0.05);
             border-radius: 8px;
         }
-        
         .modal-file-list li {
             padding: 8px 5px;
             border-bottom: 1px solid rgba(0, 0, 0, 0.05);
@@ -744,7 +710,6 @@
             align-items: center;
             gap: 8px;
         }
-        
         .modal-file-list li:last-child {
             border-bottom: none;
         }
@@ -809,7 +774,6 @@
             margin-top: 10px;
             overflow: hidden;
         }
-        
         .progress-bar {
             height: 100%;
             background: var(--primary-color);
@@ -883,7 +847,7 @@
                         <select id="semester">
                             <option value="">Select Semester</option>
                         </select>
-                    diverting
+                    </div>
                     <div class="pref-group">
                         <label for="examType">Exam Type</label>
                         <select id="examType">
@@ -1016,7 +980,7 @@
         const parallelUploadInfo = document.getElementById('parallelUploadInfo');
 
         // Configuration
-        const DRIVE_API_KEY = 'AIzaSyDF0qDqon7LUpPxM3S3XOGmiXqHY9BG5_4';
+        const DRIVE_API_KEY = 'AIzaSyDF0qDqon7LUpPxM3S3XOGmiXqHY9BG5_4'; // Replace with your valid Google Drive API key
         const DRIVE_FOLDER_ID = '1GtKc243UyP_pWvmFKbxwTRSy_PvQ7rsF';
         const BOT_TOKEN = '7616102961:AAHqU8SwIZtPCwmx34TqTbmgECHx1h0w4JI';
         let telegramUserId = null;
@@ -1035,6 +999,7 @@
             console.log(`[DEBUG] ${message}`);
             if (debugContent) {
                 debugContent.innerHTML += `<div>${new Date().toLocaleTimeString()}: ${message}</div>`;
+                debugContent.scrollTop = debugContent.scrollHeight;
             }
         }
 
@@ -1073,7 +1038,6 @@
                 if (window.Telegram && Telegram.WebApp) {
                     Telegram.WebApp.ready();
                     telegramUserId = Telegram.WebApp.initDataUnsafe?.user?.id;
-                    
                     if (telegramUserId) {
                         isTelegramConnected = true;
                         telegramStatus.innerHTML = `
@@ -1088,6 +1052,7 @@
             } catch (e) {
                 console.error('Telegram WebApp initialization error:', e);
                 telegramStatusText.textContent = 'Telegram: Connection failed';
+                showToast('Failed to connect to Telegram', 'error');
             }
             updateActionButton();
         }
@@ -1119,11 +1084,12 @@
                 debugContent.innerHTML = `
                     <div>Error: Invalid Google Drive API Key</div>
                     <div>To fix this issue:</div>
-                    <div>1. Go to Google Cloud Console</div>
-                    <div>2. Create a project or select existing one</div>
+                    <div>1. Go to Google Cloud Console (https://console.cloud.google.com)</div>
+                    <div>2. Create a project or select an existing one</div>
                     <div>3. Enable Google Drive API</div>
-                    <div>4. Create API credentials</div>
-                    <div>5. Replace the DRIVE_API_KEY value with your actual key</div>
+                    <div>4. Create API credentials (API Key)</div>
+                    <div>5. Replace DRIVE_API_KEY with your actual key</div>
+                    <div>6. Ensure the key has access to the Google Drive API</div>
                 `;
                 return false;
             }
@@ -1145,8 +1111,19 @@
                     throw new Error('Invalid API key');
                 }
                 
+                // Test folder accessibility
+                const testResponse = await fetch(`https://www.googleapis.com/drive/v3/files/${DRIVE_FOLDER_ID}?fields=id,name&key=${DRIVE_API_KEY}`);
+                if (!testResponse.ok) {
+                    const errorData = await testResponse.json();
+                    throw new Error(`Cannot access folder: ${errorData.error.message || testResponse.statusText}`);
+                }
+                
                 const semesters = await fetchDriveFolders(DRIVE_FOLDER_ID);
                 debugLog(`Found ${semesters.length} semesters`);
+                
+                if (semesters.length === 0) {
+                    throw new Error('No semesters found in the specified folder');
+                }
                 
                 populateSelect(semesterSelect, semesters.map(folder => folder.name));
                 
@@ -1154,8 +1131,16 @@
                     folderStructure.semesters[folder.name] = folder.id;
                 });
                 
+                // Clear downstream dropdowns
+                examTypeSelect.innerHTML = '<option value="">Select Exam Type</option>';
+                courseSelect.innerHTML = '<option value="">Select Course</option>';
+                
                 semesterSelect.addEventListener('change', async () => {
-                    if (!semesterSelect.value) return;
+                    if (!semesterSelect.value) {
+                        examTypeSelect.innerHTML = '<option value="">Select Exam Type</option>';
+                        courseSelect.innerHTML = '<option value="">Select Course</option>';
+                        return;
+                    }
                     
                     showLoading(true);
                     try {
@@ -1163,6 +1148,13 @@
                         debugLog(`Fetching exam types for semester: ${semesterSelect.value} (ID: ${semesterId})`);
                         const examTypes = await fetchDriveFolders(semesterId);
                         debugLog(`Found ${examTypes.length} exam types`);
+                        
+                        if (examTypes.length === 0) {
+                            showToast('No exam types found for this semester', 'warning');
+                            examTypeSelect.innerHTML = '<option value="">No Exam Types Available</option>';
+                            courseSelect.innerHTML = '<option value="">Select Course</option>';
+                            return;
+                        }
                         
                         populateSelect(examTypeSelect, examTypes.map(folder => folder.name));
                         
@@ -1174,13 +1166,18 @@
                     } catch (error) {
                         debugLog(`Error fetching exam types: ${error.message}`);
                         showToast(`Error fetching exam types: ${error.message}`, 'error');
+                        examTypeSelect.innerHTML = '<option value="">Error Loading Exam Types</option>';
+                        courseSelect.innerHTML = '<option value="">Select Course</option>';
                     } finally {
                         showLoading(false);
                     }
                 });
                 
                 examTypeSelect.addEventListener('change', async () => {
-                    if (!semesterSelect.value || !examTypeSelect.value) return;
+                    if (!semesterSelect.value || !examTypeSelect.value) {
+                        courseSelect.innerHTML = '<option value="">Select Course</option>';
+                        return;
+                    }
                     
                     showLoading(true);
                     try {
@@ -1188,6 +1185,12 @@
                         debugLog(`Fetching courses for exam type: ${examTypeSelect.value} (ID: ${examTypeId})`);
                         const courses = await fetchDriveFolders(examTypeId);
                         debugLog(`Found ${courses.length} courses`);
+                        
+                        if (courses.length === 0) {
+                            showToast('No courses found for this exam type', 'warning');
+                            courseSelect.innerHTML = '<option value="">No Courses Available</option>';
+                            return;
+                        }
                         
                         populateSelect(courseSelect, courses.map(folder => folder.name));
                         
@@ -1197,13 +1200,14 @@
                     } catch (error) {
                         debugLog(`Error fetching courses: ${error.message}`);
                         showToast(`Error fetching courses: ${error.message}`, 'error');
+                        courseSelect.innerHTML = '<option value="">Error Loading Courses</option>';
                     } finally {
                         showLoading(false);
                     }
                 });
                 
                 showToast('Repository structure loaded successfully', 'success');
-                placeholderText.textContent = 'Select semester, exam type and course to view available resources';
+                placeholderText.textContent = 'Select semester, exam type, and course to view available resources';
             } catch (error) {
                 console.error('Failed to fetch folder structure:', error);
                 debugLog(`Failed to fetch folder structure: ${error.message}`);
@@ -1211,6 +1215,19 @@
                 placeholderText.textContent = `Failed to load repository: ${error.message}`;
                 retrySection.style.display = 'block';
                 debugInfo.style.display = 'block';
+                debugContent.innerHTML = `
+                    <div>Error: ${error.message}</div>
+                    <div>Possible causes:</div>
+                    <div>- Invalid or restricted Google Drive API key</div>
+                    <div>- Folder ID (${DRIVE_FOLDER_ID}) is incorrect or inaccessible</div>
+                    <div>- Network connectivity issues</div>
+                    <div>- Google Drive API rate limits exceeded</div>
+                    <div>Steps to resolve:</div>
+                    <div>1. Verify DRIVE_API_KEY in the code</div>
+                    <div>2. Ensure the folder ID is correct and accessible</div>
+                    <div>3. Check Google Cloud Console for API restrictions</div>
+                    <div>4. Try again later if rate limits are the issue</div>
+                `;
             } finally {
                 showLoading(false);
             }
@@ -1219,12 +1236,15 @@
         // Fetch folders from Google Drive
         async function fetchDriveFolders(parentId) {
             const encodedParentId = encodeURIComponent(parentId);
-            const url = `https://www.googleapis.com/drive/v3/files?q='${encodedParentId}'+in+parents+and+mimeType='application/vnd.google-apps.folder'&key=${DRIVE_API_KEY}`;
+            const url = `https://www.googleapis.com/drive/v3/files?q='${encodedParentId}'+in+parents+and+mimeType='application/vnd.google-apps.folder'+and+trashed=false&fields=files(id,name)&key=${DRIVE_API_KEY}`;
             
             debugLog(`Fetching folders with URL: ${url.substring(0, 100)}...`);
             
             try {
-                const response = await fetch(url);
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 10000);
+                const response = await fetch(url, { signal: controller.signal });
+                clearTimeout(timeoutId);
                 
                 if (!response.ok) {
                     const errorData = await response.json();
@@ -1237,6 +1257,7 @@
                 
                 if (!data.files || data.files.length === 0) {
                     debugLog(`No folders found in parent: ${parentId}`);
+                    return [];
                 }
                 
                 return data.files.map(folder => ({
@@ -1251,6 +1272,7 @@
 
         // Retry button handler
         retryBtn.addEventListener('click', () => {
+            debugLog('Retrying to fetch folder structure');
             fetchDriveStructure();
         });
 
@@ -1258,6 +1280,14 @@
         function populateSelect(selectElement, options) {
             while (selectElement.options.length > 1) {
                 selectElement.remove(1);
+            }
+            
+            if (options.length === 0) {
+                const option = document.createElement('option');
+                option.value = '';
+                option.textContent = 'No options available';
+                selectElement.appendChild(option);
+                return;
             }
             
             options.forEach(option => {
@@ -1292,7 +1322,13 @@
                 
             } catch (error) {
                 debugLog(`Error fetching files: ${error.message}`);
-                showToast(`Error: ${error.message}`, 'error');
+                showToast(`Error fetching files: ${error.message}`, 'error');
+                fileList.innerHTML = `
+                    <div class="placeholder">
+                        <i class="fas fa-file-exclamation"></i>
+                        <p>Error loading files: ${error.message}</p>
+                    </div>
+                `;
             } finally {
                 showLoading(false);
             }
@@ -1301,13 +1337,15 @@
         // Fetch files from Google Drive folder
         async function fetchDriveFiles(folderId) {
             const encodedFolderId = encodeURIComponent(folderId);
-            const url = `https://www.googleapis.com/drive/v3/files?q='${encodedFolderId}'+in Magician in the Middle
-in+parents+and+trashed+=+false&fields=files(id,name,size,webViewLink,webContentLink,mimeType)&key=${DRIVE_API_KEY}`;
+            const url = `https://www.googleapis.com/drive/v3/files?q='${encodedFolderId}'+in+parents+and+trashed=false&fields=files(id,name,size,webViewLink,webContentLink,mimeType)&key=${DRIVE_API_KEY}`;
             
             debugLog(`Fetching files with URL: ${url.substring(0, 100)}...`);
             
             try {
-                const response = await fetch(url);
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 10000);
+                const response = await fetch(url, { signal: controller.signal });
+                clearTimeout(timeoutId);
                 
                 if (!response.ok) {
                     const errorData = await response.json();
@@ -1320,6 +1358,7 @@ in+parents+and+trashed+=+false&fields=files(id,name,size,webViewLink,webContentL
                 
                 if (!data.files || data.files.length === 0) {
                     debugLog(`No files found in folder: ${folderId}`);
+                    return [];
                 }
                 
                 return data.files.map(file => ({
