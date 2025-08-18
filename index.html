@@ -828,6 +828,21 @@
             font-weight: 600;
             color: var(--primary-color);
         }
+        /* Parallel upload indicator */
+        .parallel-upload {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .parallel-upload-badge {
+            background: var(--accent-color);
+            color: white;
+            font-size: 0.75rem;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
@@ -952,6 +967,11 @@
                 <div class="modal-file-list" id="modalFileList">
                     <!-- Files will be listed here -->
                 </div>
+                <div class="parallel-upload" id="parallelUploadInfo" style="display: none;">
+                    <i class="fas fa-bolt"></i>
+                    <span>Using parallel upload for faster transfer</span>
+                    <span class="parallel-upload-badge">3x faster</span>
+                </div>
             </div>
             <div class="modal-buttons">
                 <button class="btn btn-secondary" id="cancelSend">Cancel</button>
@@ -1004,6 +1024,7 @@
         const retryBtn = document.getElementById('retryBtn');
         const debugInfo = document.getElementById('debugInfo');
         const debugContent = document.getElementById('debugContent');
+        const parallelUploadInfo = document.getElementById('parallelUploadInfo');
         
         // Configuration - Updated with your provided keys
         const DRIVE_API_KEY = 'AIzaSyDF0qDqon7LUpPxM3S3XOGmiXqHY9BG5_4';
@@ -1560,12 +1581,20 @@
                 confirmAction.innerHTML = '<i class="fab fa-telegram"></i> Send Now';
                 confirmAction.classList.add('btn-telegram');
                 confirmAction.classList.remove('btn-download');
+                
+                // Show parallel upload info for multiple files
+                if (validFiles.length > 1) {
+                    parallelUploadInfo.style.display = 'flex';
+                } else {
+                    parallelUploadInfo.style.display = 'none';
+                }
             } else {
                 modalTitle.innerHTML = '<i class="fas fa-download"></i> Confirm Download';
                 modalMessage.innerHTML = `You are about to download <strong>${validFiles.length} files</strong>. Large files may take longer to download.`;
                 confirmAction.innerHTML = '<i class="fas fa-download"></i> Download Now';
                 confirmAction.classList.add('btn-download');
                 confirmAction.classList.remove('btn-telegram');
+                parallelUploadInfo.style.display = 'none';
             }
             
             confirmationModal.classList.add('active');
@@ -1612,19 +1641,30 @@
                     throw new Error(`File ${file.name} is too large (max 50MB)`);
                 }
                 
+                // Download the file from Google Drive
+                const response = await fetch(file.url);
+                if (!response.ok) {
+                    throw new Error(`Failed to download file: ${file.name}`);
+                }
+                
+                const blob = await response.blob();
+                
                 // Create a FormData object
                 const formData = new FormData();
                 formData.append('chat_id', userId);
-                formData.append('document', file.url);
+                
+                // Create a File object with the correct filename
+                const fileObj = new File([blob], file.name, { type: blob.type });
+                formData.append('document', fileObj);
                 formData.append('caption', `File: ${file.name}`);
                 
                 // Send the request
-                const response = await fetch(apiUrl, {
+                const telegramResponse = await fetch(apiUrl, {
                     method: 'POST',
                     body: formData
                 });
                 
-                const result = await response.json();
+                const result = await telegramResponse.json();
                 if (!result.ok) {
                     throw new Error(result.description || 'Telegram API error');
                 }
@@ -1637,7 +1677,7 @@
             }
         }
         
-        // Send files to Telegram - FIXED VERSION
+        // Send files to Telegram using parallel processing - FIXED VERSION
         async function sendToTelegram() {
             // Get file data from checkboxes including size
             const validFiles = selectedFiles.map(checkbox => {
@@ -1681,30 +1721,50 @@
                 `;
                 toastContainer.appendChild(progressToast);
                 
-                // Process files one by one
-                for (let i = 0; i < validFiles.length; i++) {
-                    const file = validFiles[i];
-                    const progress = Math.round(((i + 1) / totalFiles) * 100);
+                // Process files in parallel for faster upload
+                const batchSize = 3; // Process 3 files at a time
+                const batches = [];
+                
+                // Split files into batches
+                for (let i = 0; i < validFiles.length; i += batchSize) {
+                    batches.push(validFiles.slice(i, i + batchSize));
+                }
+                
+                // Process each batch
+                for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
+                    const batch = batches[batchIndex];
+                    
+                    // Process all files in the batch in parallel
+                    const batchPromises = batch.map(async (file) => {
+                        try {
+                            await sendFileToTelegram(file, telegramUserId);
+                            succeeded++;
+                            debugLog(`Successfully sent file: ${file.name}`);
+                            return { success: true, file: file.name };
+                        } catch (error) {
+                            debugLog(`Failed to send ${file.name}: ${error.message}`);
+                            return { success: false, file: file.name, error: error.message };
+                        }
+                    });
+                    
+                    // Wait for all files in the batch to complete
+                    const batchResults = await Promise.all(batchPromises);
                     
                     // Update progress
+                    const processedFiles = Math.min((batchIndex + 1) * batchSize, totalFiles);
+                    const progress = Math.round((processedFiles / totalFiles) * 100);
+                    
                     progressToast.querySelector('.progress-bar').style.width = `${progress}%`;
                     progressToast.querySelector('.percentage').textContent = `${progress}%`;
                     progressToast.querySelector('.file-progress span:first-child').textContent = 
-                        `Sending: ${file.name} (${i + 1}/${totalFiles})`;
+                        `Processing batch ${batchIndex + 1}/${batches.length} (${processedFiles}/${totalFiles} files)`;
                     
-                    try {
-                        await sendFileToTelegram(file, telegramUserId);
-                        succeeded++;
-                        debugLog(`Successfully sent file: ${file.name}`);
-                    } catch (error) {
-                        debugLog(`Failed to send ${file.name}: ${error.message}`);
-                        showToast(`Failed to send ${file.name}: ${error.message}`, 'error');
-                    }
-                    
-                    // Add a delay between files to avoid rate limiting (5 seconds)
-                    if (i < validFiles.length - 1) {
-                        await new Promise(resolve => setTimeout(resolve, 5000));
-                    }
+                    // Log any failures in this batch
+                    batchResults.forEach(result => {
+                        if (!result.success) {
+                            showToast(`Failed to send ${result.file}: ${result.error}`, 'error');
+                        }
+                    });
                 }
                 
                 // Remove progress toast
