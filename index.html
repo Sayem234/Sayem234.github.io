@@ -1612,21 +1612,31 @@
                 formData.append('chat_id', userId);
                 formData.append('caption', `File: ${file.name}`);
                 
-                // For files smaller than 20MB, download and upload directly
-                if (file.size < 20 * 1024 * 1024) {
+                // For files smaller than 10MB, download and upload directly
+                if (file.size < 10 * 1024 * 1024) {
                     try {
-                        // Download file
-                        const response = await fetch(file.url);
+                        // Download file with timeout
+                        const controller = new AbortController();
+                        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+                        
+                        const response = await fetch(file.url, { signal: controller.signal });
+                        clearTimeout(timeoutId);
+                        
                         if (!response.ok) throw new Error(`Failed to download ${file.name}`);
                         
                         const blob = await response.blob();
                         formData.append('document', blob, file.name);
                         
-                        // Upload to Telegram
+                        // Upload to Telegram with timeout
+                        const uploadController = new AbortController();
+                        const uploadTimeoutId = setTimeout(() => uploadController.abort(), 60000); // 60 second timeout
+                        
                         const uploadResponse = await fetch(apiUrl, {
                             method: 'POST',
-                            body: formData
+                            body: formData,
+                            signal: uploadController.signal
                         });
+                        clearTimeout(uploadTimeoutId);
                         
                         const result = await uploadResponse.json();
                         if (!result.ok) {
@@ -1636,6 +1646,9 @@
                         debugLog(`Successfully sent file: ${file.name}`);
                         return true;
                     } catch (downloadError) {
+                        if (downloadError.name === 'AbortError') {
+                            throw new Error(`Timeout while processing ${file.name}`);
+                        }
                         debugLog(`Download/upload failed for ${file.name}: ${downloadError.message}`);
                         throw downloadError;
                     }
@@ -1643,23 +1656,60 @@
                     // For larger files, try sending by URL
                     formData.append('document', file.url);
                     
-                    const uploadResponse = await fetch(apiUrl, {
-                        method: 'POST',
-                        body: formData
-                    });
+                    const uploadController = new AbortController();
+                    const uploadTimeoutId = setTimeout(() => uploadController.abort(), 30000); // 30 second timeout
                     
-                    const result = await uploadResponse.json();
-                    if (!result.ok) {
-                        throw new Error(result.description || 'Telegram API error');
+                    try {
+                        const uploadResponse = await fetch(apiUrl, {
+                            method: 'POST',
+                            body: formData,
+                            signal: uploadController.signal
+                        });
+                        clearTimeout(uploadTimeoutId);
+                        
+                        const result = await uploadResponse.json();
+                        if (!result.ok) {
+                            throw new Error(result.description || 'Telegram API error');
+                        }
+                        
+                        debugLog(`Successfully sent file by URL: ${file.name}`);
+                        return true;
+                    } catch (urlError) {
+                        if (urlError.name === 'AbortError') {
+                            throw new Error(`Timeout while sending ${file.name} by URL`);
+                        }
+                        debugLog(`URL send failed for ${file.name}: ${urlError.message}`);
+                        throw urlError;
                     }
-                    
-                    debugLog(`Successfully sent file by URL: ${file.name}`);
-                    return true;
                 }
             } catch (error) {
                 debugLog(`Error sending ${file.name}: ${error.message}`);
                 throw new Error(`Failed to send ${file.name}: ${error.message}`);
             }
+        }
+        
+        // Add this function for retry mechanism
+        async function sendFileWithRetry(file, userId, maxRetries = 2) {
+            let lastError;
+            
+            for (let attempt = 1; attempt <= maxRetries; attempt++) {
+                try {
+                    debugLog(`Attempt ${attempt} to send ${file.name}`);
+                    return await sendFileToTelegram(file, userId);
+                } catch (error) {
+                    lastError = error;
+                    debugLog(`Attempt ${attempt} failed for ${file.name}: ${error.message}`);
+                    
+                    // If this isn't the last attempt, wait before retrying
+                    if (attempt < maxRetries) {
+                        const delay = 2000 * attempt; // Exponential backoff
+                        debugLog(`Waiting ${delay}ms before retry...`);
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                    }
+                }
+            }
+            
+            throw lastError;
         }
         
         // Send files to Telegram
@@ -1705,37 +1755,29 @@
                 `;
                 toastContainer.appendChild(progressToast);
                 
-                // Process files in batches for faster sending
-                const batchSize = 3; // Send 3 files concurrently
-                const batches = [];
-                
-                for (let i = 0; i < validFiles.length; i += batchSize) {
-                    batches.push(validFiles.slice(i, i + batchSize));
-                }
-                
-                for (const batch of batches) {
-                    // Process each batch in parallel
-                    const batchPromises = batch.map(async (file) => {
-                        try {
-                            await sendFileToTelegram(file, telegramUserId);
-                            return true;
-                        } catch (error) {
-                            debugLog(error.message);
-                            return false;
-                        }
-                    });
-                    
-                    // Wait for all files in the batch to complete
-                    const batchResults = await Promise.all(batchPromises);
-                    succeeded += batchResults.filter(result => result).length;
+                // Process files sequentially with delays to avoid rate limiting
+                for (let i = 0; i < validFiles.length; i++) {
+                    const file = validFiles[i];
+                    const progress = Math.round(((i + 1) / totalFiles) * 100);
                     
                     // Update progress
-                    const processedSoFar = validFiles.indexOf(batch[batch.length - 1]) + 1;
-                    const progress = Math.round((processedSoFar / totalFiles) * 100);
                     progressToast.querySelector('.progress-bar').style.width = `${progress}%`;
                     progressToast.querySelector('.percentage').textContent = `${progress}%`;
                     progressToast.querySelector('.file-progress span:first-child').textContent = 
-                        `Processing: ${processedSoFar}/${totalFiles} files`;
+                        `Sending: ${file.name} (${i + 1}/${totalFiles})`;
+                    
+                    try {
+                        await sendFileWithRetry(file, telegramUserId);
+                        succeeded++;
+                        debugLog(`Successfully sent file: ${file.name}`);
+                    } catch (error) {
+                        debugLog(`Failed to send ${file.name} after retries: ${error.message}`);
+                    }
+                    
+                    // Add a delay between files to avoid rate limiting (2 seconds)
+                    if (i < validFiles.length - 1) {
+                        await new Promise(resolve => setTimeout(resolve, 2000));
+                    }
                 }
                 
                 // Remove progress toast
