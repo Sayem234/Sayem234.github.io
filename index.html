@@ -980,12 +980,14 @@
         const parallelUploadInfo = document.getElementById('parallelUploadInfo');
 
         // Configuration
-        const DRIVE_API_KEY = 'AIzaSyDF0qDqon7LUpPxM3S3XOGmiXqHY9BG5_4'; // Replace with your valid Google Drive API key
+        const DRIVE_API_KEY = 'AIzaSyDF0qDqon7LUpPxM3S3XOGmiXqHY9BG5_4';
         const DRIVE_FOLDER_ID = '1GtKc243UyP_pWvmFKbxwTRSy_PvQ7rsF';
         const BOT_TOKEN = '7616102961:AAHqU8SwIZtPCwmx34TqTbmgECHx1h0w4JI';
         let telegramUserId = null;
         let isTelegramConnected = false;
         let selectedFiles = [];
+        const CACHE_KEY_PREFIX = 'file_cache_';
+        const MAX_CACHE_SIZE = 100 * 1024 * 1024; // 100MB cache limit
 
         // Folder structure mapping
         const folderStructure = {
@@ -1094,6 +1096,69 @@
                 return false;
             }
             return true;
+        }
+
+        // Cache file in browser storage
+        async function cacheFile(fileId, blob) {
+            try {
+                const cache = await caches.open('academic-resource-hub');
+                const response = new Response(blob);
+                await cache.put(`${CACHE_KEY_PREFIX}${fileId}`, response);
+                debugLog(`Cached file ${fileId}`);
+            } catch (error) {
+                debugLog(`Failed to cache file ${fileId}: ${error.message}`);
+            }
+        }
+
+        // Retrieve file from cache
+        async function getCachedFile(fileId) {
+            try {
+                const cache = await caches.open('academic-resource-hub');
+                const response = await cache.match(`${CACHE_KEY_PREFIX}${fileId}`);
+                if (response) {
+                    debugLog(`Retrieved file ${fileId} from cache`);
+                    return await response.blob();
+                }
+                return null;
+            } catch (error) {
+                debugLog(`Cache retrieval error for ${fileId}: ${error.message}`);
+                return null;
+            }
+        }
+
+        // Clear cache if it exceeds size limit
+        async function clearCacheIfNeeded() {
+            try {
+                const cache = await caches.open('academic-resource-hub');
+                const keys = await cache.keys();
+                let totalSize = 0;
+                for (const request of keys) {
+                    const response = await cache.match(request);
+                    const blob = await response.blob();
+                    totalSize += blob.size;
+                }
+                if (totalSize > MAX_CACHE_SIZE) {
+                    for (const key of keys) {
+                        await cache.delete(key);
+                    }
+                    debugLog('Cleared cache due to size limit');
+                }
+            } catch (error) {
+                debugLog(`Cache cleanup error: ${error.message}`);
+            }
+        }
+
+        // Compress file (simple example using gzip-like compression)
+        async function compressFile(blob) {
+            try {
+                const stream = blob.stream().pipeThrough(new CompressionStream('gzip'));
+                const compressedBlob = await new Response(stream).blob();
+                debugLog(`Compressed file from ${formatFileSize(blob.size)} to ${formatFileSize(compressedBlob.size)}`);
+                return compressedBlob;
+            } catch (error) {
+                debugLog(`Compression error: ${error.message}`);
+                return blob; // Fallback to original blob
+            }
         }
 
         // Fetch folder structure from Google Drive
@@ -1367,7 +1432,9 @@
                     size: file.size ? parseInt(file.size) : 0,
                     mimeType: file.mimeType,
                     webViewLink: file.webViewLink,
-                    webContentLink: `https://www.googleapis.com/drive/v3/files/${file.id}?alt=media&key=${DRIVE_API_KEY}`
+                    webContentLink: file.mimeType.includes('google-apps') 
+                        ? `https://www.googleapis.com/drive/v3/files/${file.id}/export?mimeType=application/pdf&key=${DRIVE_API_KEY}`
+                        : `https://www.googleapis.com/drive/v3/files/${file.id}?alt=media&key=${DRIVE_API_KEY}`
                 }));
             } catch (error) {
                 debugLog(`Error in fetchDriveFiles: ${error.message}`);
@@ -1601,30 +1668,39 @@
         }
 
         // Send a single file to Telegram via bot API
-        async function sendFileToTelegram(file, userId, retryCount = 3) {
+        async function sendFileToTelegram(file, userId, retryCount = 2) {
             for (let attempt = 1; attempt <= retryCount; attempt++) {
                 try {
                     debugLog(`Attempt ${attempt} to send file: ${file.name} (Size: ${formatFileSize(file.size)})`);
                     if (file.size > 50 * 1024 * 1024) {
                         throw new Error(`File ${file.name} exceeds Telegram's 50MB limit`);
                     }
-                    const downloadResponse = await fetch(file.url, {
-                        headers: {
-                            'Accept': 'application/octet-stream'
+                    
+                    let blob = await getCachedFile(file.id);
+                    if (!blob) {
+                        const downloadResponse = await fetch(file.url, {
+                            headers: {
+                                'Accept': 'application/octet-stream'
+                            }
+                        });
+                        if (!downloadResponse.ok) {
+                            throw new Error(`Failed to download ${file.name}: ${downloadResponse.statusText}`);
                         }
-                    });
-                    if (!downloadResponse.ok) {
-                        throw new Error(`Failed to download ${file.name}: ${downloadResponse.statusText}`);
+                        blob = await downloadResponse.blob();
+                        await cacheFile(file.id, blob);
                     }
-                    const blob = await downloadResponse.blob();
+                    
+                    const compressedBlob = await compressFile(blob);
+                    
                     const formData = new FormData();
                     formData.append('chat_id', userId);
-                    formData.append('document', new File([blob], file.name, {
-                        type: blob.type || 'application/octet-stream'
+                    formData.append('document', new File([compressedBlob], file.name, {
+                        type: compressedBlob.type || 'application/octet-stream'
                     }));
                     formData.append('caption', `File: ${file.name}`);
+                    
                     const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 30000);
+                    const timeoutId = setTimeout(() => controller.abort(), 20000);
                     const telegramUrl = `https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`;
                     const telegramResponse = await fetch(telegramUrl, {
                         method: 'POST',
@@ -1632,6 +1708,7 @@
                         signal: controller.signal
                     });
                     clearTimeout(timeoutId);
+                    
                     const result = await telegramResponse.json();
                     if (!result.ok) {
                         throw new Error(`Telegram API error: ${result.description || 'Unknown error'}`);
@@ -1643,7 +1720,7 @@
                     if (attempt === retryCount) {
                         return { success: false, file: file.name, error: error.message };
                     }
-                    await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
+                    await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 500));
                 }
             }
         }
@@ -1651,6 +1728,7 @@
         // Send files to Telegram with optimized parallel processing
         async function sendToTelegram() {
             const validFiles = selectedFiles.map(checkbox => ({
+                id: checkbox.id.replace('file-', ''),
                 name: checkbox.dataset.name,
                 url: checkbox.dataset.url,
                 size: parseInt(checkbox.dataset.size) || 0
@@ -1659,17 +1737,23 @@
                 showToast('No valid files selected', 'error');
                 return;
             }
+            
             actionBtn.innerHTML = '<span class="loading"></span> Sending...';
             actionBtn.disabled = true;
             confirmationModal.classList.remove('active');
+            
             try {
                 if (!isTelegramConnected || !telegramUserId) {
                     throw new Error('Telegram connection not established');
                 }
+                
+                await clearCacheIfNeeded();
+                
                 let succeeded = 0;
                 const totalFiles = validFiles.length;
-                const batchSize = 5;
+                const batchSize = Math.min(Math.max(Math.floor(totalFiles / 2), 3), 8);
                 debugLog(`Starting to send ${totalFiles} files to Telegram in batches of ${batchSize}`);
+                
                 const progressToast = document.createElement('div');
                 progressToast.className = 'toast warning';
                 progressToast.innerHTML = `
@@ -1687,27 +1771,51 @@
                     </div>
                 `;
                 toastContainer.appendChild(progressToast);
+                
+                const preFetchPromises = validFiles.map(async file => {
+                    try {
+                        const cachedBlob = await getCachedFile(file.id);
+                        if (cachedBlob) return cachedBlob;
+                        const response = await fetch(file.url, {
+                            headers: { 'Accept': 'application/octet-stream' }
+                        });
+                        if (!response.ok) throw new Error(`Pre-fetch failed for ${file.name}`);
+                        const blob = await response.blob();
+                        await cacheFile(file.id, blob);
+                        return blob;
+                    } catch (error) {
+                        debugLog(`Pre-fetch error for ${file.name}: ${error.message}`);
+                        return null;
+                    }
+                });
+                await Promise.all(preFetchPromises);
+                debugLog('Completed pre-fetching files');
+                
                 const batches = [];
                 for (let i = 0; i < validFiles.length; i += batchSize) {
                     batches.push(validFiles.slice(i, i + batchSize));
                 }
+                
                 for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
                     const batch = batches[batchIndex];
                     const batchPromises = batch.map(file => sendFileToTelegram(file, telegramUserId));
                     const batchResults = await Promise.all(batchPromises);
                     succeeded += batchResults.filter(result => result.success).length;
+                    
                     const processedFiles = Math.min((batchIndex + 1) * batchSize, totalFiles);
                     const progress = Math.round((processedFiles / totalFiles) * 100);
                     progressToast.querySelector('.progress-bar').style.width = `${progress}%`;
                     progressToast.querySelector('.percentage').textContent = `${progress}%`;
                     progressToast.querySelector('.file-progress span:first-child').textContent = 
                         `Processing batch ${batchIndex + 1}/${batches.length} (${processedFiles}/${totalFiles} files)`;
+                    
                     batchResults.forEach(result => {
                         if (!result.success) {
                             showToast(`Failed to send ${result.file}: ${result.error}`, 'error');
                         }
                     });
                 }
+                
                 setTimeout(() => progressToast.remove(), 2000);
                 debugLog(`Finished sending files. Succeeded: ${succeeded}/${totalFiles}`);
                 if (succeeded === totalFiles) {
@@ -1783,7 +1891,7 @@
 
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
-            debugLog('Application initialized with Google Drive integration');
+            debugLog('Application initialized with optimized file sending');
             initTheme();
             initTelegram();
             if (checkApiKey()) {
