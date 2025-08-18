@@ -1600,7 +1600,7 @@
             return match ? match[1] : '';
         }
         
-        // Send a file to Telegram via bot API - Simplified and fixed
+        // Send a file to Telegram via bot API - FIXED VERSION
         async function sendFileToTelegram(file, userId) {
             const apiUrl = `https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`;
             
@@ -1615,22 +1615,16 @@
                 // Create a FormData object
                 const formData = new FormData();
                 formData.append('chat_id', userId);
+                formData.append('document', file.url);
                 formData.append('caption', `File: ${file.name}`);
                 
-                // Download file
-                const response = await fetch(file.url);
-                if (!response.ok) throw new Error(`Failed to download ${file.name}`);
-                
-                const blob = await response.blob();
-                formData.append('document', blob, file.name);
-                
-                // Upload to Telegram
-                const uploadResponse = await fetch(apiUrl, {
+                // Send the request
+                const response = await fetch(apiUrl, {
                     method: 'POST',
                     body: formData
                 });
                 
-                const result = await uploadResponse.json();
+                const result = await response.json();
                 if (!result.ok) {
                     throw new Error(result.description || 'Telegram API error');
                 }
@@ -1643,7 +1637,7 @@
             }
         }
         
-        // Send files to Telegram - Simplified approach
+        // Send files to Telegram - FIXED VERSION
         async function sendToTelegram() {
             // Get file data from checkboxes including size
             const validFiles = selectedFiles.map(checkbox => {
