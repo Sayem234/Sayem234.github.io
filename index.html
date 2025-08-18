@@ -1308,7 +1308,9 @@
         async function fetchDriveFiles(folderId) {
             // Ensure proper URL encoding
             const encodedFolderId = encodeURIComponent(folderId);
-            const url = `https://www.googleapis.com/drive/v3/files?q='${encodedFolderId}'+in+parents+and+trashed+=+false&key=${DRIVE_API_KEY}`;
+            
+            // Add fields parameter to get file size and other metadata
+            const url = `https://www.googleapis.com/drive/v3/files?q='${encodedFolderId}'+in+parents+and+trashed+=+false&fields=files(id,name,size,webViewLink,webContentLink,mimeType)&key=${DRIVE_API_KEY}`;
             
             debugLog(`Fetching files with URL: ${url.substring(0, 100)}...`);
             
@@ -1332,6 +1334,7 @@
                     id: file.id,
                     name: file.name,
                     size: file.size ? parseInt(file.size) : 0,
+                    mimeType: file.mimeType,
                     webViewLink: file.webViewLink,
                     webContentLink: `https://www.googleapis.com/drive/v3/files/${file.id}?alt=media&key=${DRIVE_API_KEY}`
                 }));
@@ -1358,7 +1361,8 @@
                 const isLarge = file.size > 20 * 1024 * 1024; // 20MB
                 const fileSize = formatFileSize(file.size);
                 
-                const fileType = getFileType(file.name);
+                // Use mimeType to determine file type if extension is unclear
+                const fileType = getFileType(file.name, file.mimeType);
                 const iconClass = getFileIconClass(fileType);
                 
                 const showActions = !isTelegramConnected;
@@ -1407,6 +1411,7 @@
                     updateSelectedCount();
                 });
             });
+            
             document.querySelectorAll('.preview-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
                     const url = this.dataset.url;
@@ -1430,8 +1435,20 @@
             }
         }
         
-        // Get file type from extension
-        function getFileType(filename) {
+        // Get file type from extension or mimeType
+        function getFileType(filename, mimeType) {
+            // First try to determine from mimeType
+            if (mimeType) {
+                if (mimeType.includes('pdf')) return 'pdf';
+                if (mimeType.includes('word') || mimeType.includes('document')) return 'doc';
+                if (mimeType.includes('presentation') || mimeType.includes('powerpoint')) return 'ppt';
+                if (mimeType.includes('sheet') || mimeType.includes('excel')) return 'xls';
+                if (mimeType.includes('image')) return 'img';
+                if (mimeType.includes('text')) return 'txt';
+                if (mimeType.includes('zip') || mimeType.includes('rar')) return 'zip';
+            }
+            
+            // Fall back to file extension
             const extension = filename.split('.').pop().toLowerCase();
             
             if (['pdf'].includes(extension)) return 'pdf';
@@ -1559,46 +1576,71 @@
             const fileType = getFileType(fileName);
             let previewUrl = url;
             
-            // Google Drive previews work best for PDFs and images
+            // Use Google Drive embed URLs for better preview
             if (fileType === 'pdf') {
-                previewUrl = `https://drive.google.com/viewerng/viewer?embedded=true&url=${encodeURIComponent(url)}`;
+                previewUrl = `https://drive.google.com/file/d/${extractFileIdFromUrl(url)}/preview`;
+            } else if (['doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx'].includes(fileType)) {
+                // For Google Docs, Sheets, etc., use the preview link
+                previewUrl = `https://drive.google.com/file/d/${extractFileIdFromUrl(url)}/preview`;
+            } else if (['jpg', 'jpeg', 'png', 'gif'].includes(fileType)) {
+                // For images, use direct link
+                previewUrl = url;
+            } else {
+                // For other file types, use Google Docs viewer
+                previewUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`;
             }
             
             previewIframe.src = previewUrl;
             previewModal.classList.add('active');
         }
         
+        // Helper function to extract file ID from Google Drive URL
+        function extractFileIdFromUrl(url) {
+            const match = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+            return match ? match[1] : '';
+        }
+        
         // Send a file to Telegram via bot API
-        async function sendFileToTelegram(file, userId, progressCallback) {
+        async function sendFileToTelegram(file, userId) {
             const apiUrl = `https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`;
             
             try {
                 debugLog(`Sending file to Telegram: ${file.name}`);
                 
-                // We'll use the direct download URL from Google Drive
+                // Create a FormData object
                 const formData = new FormData();
                 formData.append('chat_id', userId);
                 formData.append('caption', `File: ${file.name}`);
                 
-                // For small files, we can download and send as FormData
-                // For large files, we need to send via URL
+                // For files smaller than 20MB, download and upload directly
                 if (file.size < 20 * 1024 * 1024) {
-                    // Download file and send as blob
-                    const response = await fetch(file.url);
-                    const blob = await response.blob();
-                    formData.append('document', blob, file.name);
-                    
-                    const uploadResponse = await fetch(apiUrl, {
-                        method: 'POST',
-                        body: formData
-                    });
-                    
-                    const result = await uploadResponse.json();
-                    if (!result.ok) {
-                        throw new Error(result.description || 'Telegram API error');
+                    try {
+                        // Download file
+                        const response = await fetch(file.url);
+                        if (!response.ok) throw new Error(`Failed to download ${file.name}`);
+                        
+                        const blob = await response.blob();
+                        formData.append('document', blob, file.name);
+                        
+                        // Upload to Telegram
+                        const uploadResponse = await fetch(apiUrl, {
+                            method: 'POST',
+                            body: formData
+                        });
+                        
+                        const result = await uploadResponse.json();
+                        if (!result.ok) {
+                            throw new Error(result.description || 'Telegram API error');
+                        }
+                        
+                        debugLog(`Successfully sent file: ${file.name}`);
+                        return true;
+                    } catch (downloadError) {
+                        debugLog(`Download/upload failed for ${file.name}: ${downloadError.message}`);
+                        throw downloadError;
                     }
                 } else {
-                    // For large files, send via URL
+                    // For larger files, try sending by URL
                     formData.append('document', file.url);
                     
                     const uploadResponse = await fetch(apiUrl, {
@@ -1610,10 +1652,10 @@
                     if (!result.ok) {
                         throw new Error(result.description || 'Telegram API error');
                     }
+                    
+                    debugLog(`Successfully sent file by URL: ${file.name}`);
+                    return true;
                 }
-                
-                debugLog(`Successfully sent file: ${file.name}`);
-                return true;
             } catch (error) {
                 debugLog(`Error sending ${file.name}: ${error.message}`);
                 throw new Error(`Failed to send ${file.name}: ${error.message}`);
@@ -1626,7 +1668,7 @@
                 return {
                     name: checkbox.dataset.name,
                     url: checkbox.dataset.url,
-                    size: 0 // Size not critical for this operation
+                    size: 0
                 };
             });
             
@@ -1663,24 +1705,37 @@
                 `;
                 toastContainer.appendChild(progressToast);
                 
-                for (let i = 0; i < validFiles.length; i++) {
-                    const file = validFiles[i];
+                // Process files in batches for faster sending
+                const batchSize = 3; // Send 3 files concurrently
+                const batches = [];
+                
+                for (let i = 0; i < validFiles.length; i += batchSize) {
+                    batches.push(validFiles.slice(i, i + batchSize));
+                }
+                
+                for (const batch of batches) {
+                    // Process each batch in parallel
+                    const batchPromises = batch.map(async (file) => {
+                        try {
+                            await sendFileToTelegram(file, telegramUserId);
+                            return true;
+                        } catch (error) {
+                            debugLog(error.message);
+                            return false;
+                        }
+                    });
+                    
+                    // Wait for all files in the batch to complete
+                    const batchResults = await Promise.all(batchPromises);
+                    succeeded += batchResults.filter(result => result).length;
                     
                     // Update progress
-                    const progress = Math.round(((i + 1) / totalFiles) * 100);
+                    const processedSoFar = validFiles.indexOf(batch[batch.length - 1]) + 1;
+                    const progress = Math.round((processedSoFar / totalFiles) * 100);
                     progressToast.querySelector('.progress-bar').style.width = `${progress}%`;
                     progressToast.querySelector('.percentage').textContent = `${progress}%`;
-                    progressToast.querySelector('.file-progress span:first-child').textContent = `Sending: ${file.name}`;
-                    
-                    try {
-                        await sendFileToTelegram(file, telegramUserId);
-                        succeeded++;
-                    } catch (error) {
-                        debugLog(error.message);
-                    }
-                    
-                    // Add a small delay between files to avoid rate limiting
-                    await new Promise(resolve => setTimeout(resolve, 500));
+                    progressToast.querySelector('.file-progress span:first-child').textContent = 
+                        `Processing: ${processedSoFar}/${totalFiles} files`;
                 }
                 
                 // Remove progress toast
