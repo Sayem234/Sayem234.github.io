@@ -142,6 +142,13 @@
         from { transform: scale(0.8); opacity: 0; }
         to { transform: scale(1); opacity: 1; }
       }
+      
+      .nav-btn {
+        transition: all 0.2s ease;
+      }
+      .nav-btn:active {
+        transform: scale(0.9);
+      }
     </style>
   </head>
   <body class="antialiased font-sans">
@@ -210,7 +217,7 @@
         selectedCourse: null,
         courseImages: [],
         isLoadingGallery: false,
-        previewImageUrl: null, // New state for image lightbox
+        previewImageIndex: null, // Tracks index for navigation
 
         // Reminder State
         isReminderModalOpen: false, 
@@ -567,15 +574,36 @@
           state.courseImages = [];
           render();
         },
-        openPreview: (url) => {
-          state.previewImageUrl = url;
+        openPreview: (index) => {
+          state.previewImageIndex = index;
           render();
         },
         closePreview: () => {
-          state.previewImageUrl = null;
+          state.previewImageIndex = null;
+          render();
+        },
+        nextPreviewImage: (e) => {
+          if (e) e.stopPropagation();
+          if (state.courseImages.length === 0) return;
+          state.previewImageIndex = (state.previewImageIndex + 1) % state.courseImages.length;
+          render();
+        },
+        prevPreviewImage: (e) => {
+          if (e) e.stopPropagation();
+          if (state.courseImages.length === 0) return;
+          state.previewImageIndex = (state.previewImageIndex - 1 + state.courseImages.length) % state.courseImages.length;
           render();
         }
       };
+
+      // Listen for keyboard navigation
+      window.addEventListener('keydown', (e) => {
+        if (state.previewImageIndex !== null) {
+          if (e.key === 'ArrowRight') actions.nextPreviewImage();
+          if (e.key === 'ArrowLeft') actions.prevPreviewImage();
+          if (e.key === 'Escape') actions.closePreview();
+        }
+      });
 
       // --- Rendering ---
       function Icon(name, size=20, extraClass='') {
@@ -768,9 +796,9 @@
       function renderGalleryModal() {
         if (!state.selectedCourse) return '';
 
-        const imagesHtml = state.courseImages.map(url => `
+        const imagesHtml = state.courseImages.map((url, index) => `
           <div class="bg-gray-200 dark:bg-gray-700 rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-shadow">
-            <img src="${url}" alt="Course Material" loading="lazy" class="w-full h-full object-cover aspect-[3/4] cursor-pointer" onclick="actions.openPreview('${url}')">
+            <img src="${url}" alt="Course Material" loading="lazy" class="w-full h-full object-cover aspect-[3/4] cursor-pointer" onclick="actions.openPreview(${index})">
           </div>
         `).join('');
 
@@ -802,14 +830,52 @@
       }
 
       function renderImagePreview() {
-        if (!state.previewImageUrl) return '';
+        if (state.previewImageIndex === null) return '';
+        const currentUrl = state.courseImages[state.previewImageIndex];
+        const total = state.courseImages.length;
+        const current = state.previewImageIndex + 1;
+
         return `
           <div class="fixed inset-0 z-[200] flex items-center justify-center bg-black/95 p-4 md:p-12 transition-all backdrop-blur-xl" onclick="actions.closePreview()">
             <div class="relative w-full h-full flex items-center justify-center">
-               <button onclick="actions.closePreview(); event.stopPropagation();" class="absolute top-0 right-0 p-4 text-white bg-white/10 hover:bg-white/20 rounded-full transition-colors z-[210]">
-                 ${Icon('x', 32)}
-               </button>
-               <img src="${state.previewImageUrl}" class="max-w-full max-h-full object-contain preview-anim shadow-2xl rounded-sm" onclick="event.stopPropagation()">
+               <!-- Header Info -->
+               <div class="absolute top-0 left-0 right-0 p-4 flex justify-between items-center text-white z-[210] pointer-events-none">
+                 <div class="bg-black/50 backdrop-blur-md px-4 py-2 rounded-full text-sm font-bold tracking-widest uppercase">
+                   ${state.selectedCourse} (${current} / ${total})
+                 </div>
+                 <button onclick="actions.closePreview(); event.stopPropagation();" class="p-3 text-white bg-white/10 hover:bg-white/20 rounded-full transition-colors pointer-events-auto">
+                   ${Icon('x', 24)}
+                 </button>
+               </div>
+
+               <!-- Image and Navigation Grid -->
+               <div class="w-full h-full grid grid-cols-[auto_1fr_auto] items-center gap-4">
+                 
+                 <!-- Prev Button -->
+                 <div class="flex items-center justify-center h-full">
+                    <button onclick="actions.prevPreviewImage(event)" class="nav-btn p-4 md:p-6 text-white bg-white/10 hover:bg-white/20 rounded-full transition-all flex items-center justify-center shadow-lg hover:scale-110">
+                      ${Icon('chevron-left', 32)}
+                    </button>
+                 </div>
+
+                 <!-- Preview Image -->
+                 <div class="w-full h-full flex items-center justify-center overflow-hidden">
+                    <img src="${currentUrl}" class="max-w-full max-h-[80vh] object-contain preview-anim shadow-2xl rounded-sm" onclick="event.stopPropagation()">
+                 </div>
+
+                 <!-- Next Button -->
+                 <div class="flex items-center justify-center h-full">
+                    <button onclick="actions.nextPreviewImage(event)" class="nav-btn p-4 md:p-6 text-white bg-white/10 hover:bg-white/20 rounded-full transition-all flex items-center justify-center shadow-lg hover:scale-110">
+                      ${Icon('chevron-right', 32)}
+                    </button>
+                 </div>
+
+               </div>
+
+               <!-- Bottom Helper Info -->
+               <div class="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/50 text-[10px] font-bold uppercase tracking-[0.3em] pointer-events-none">
+                 Use Arrow Keys to Navigate
+               </div>
             </div>
           </div>
         `;
