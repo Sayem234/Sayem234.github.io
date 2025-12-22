@@ -373,8 +373,11 @@
           const res = await fetch(apiUrl);
           if (res.ok) {
             const data = await res.json();
-            // Filter to find only directories (course codes)
-            state.courses = data.filter(item => item.type === 'dir').map(item => item.name);
+            // Natural sort to ensure CSE-1 comes before CSE-10
+            state.courses = data
+              .filter(item => item.type === 'dir')
+              .map(item => item.name)
+              .sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
           }
         } catch (e) {
           console.error("Error fetching courses:", e);
@@ -395,9 +398,13 @@
           if (res.ok) {
             const data = await res.json();
             const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'];
-            state.courseImages = data
+            
+            // Sort files naturally by name before mapping to URLs
+            const sortedItems = data
               .filter(item => item.type === 'file' && imageExtensions.includes(item.name.split('.').pop().toLowerCase()))
-              .map(item => item.download_url);
+              .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
+              
+            state.courseImages = sortedItems.map(item => item.download_url);
           }
         } catch (e) {
           console.error("Error fetching course images:", e);
@@ -776,7 +783,7 @@
             <div class="w-12 h-12 bg-brand-pink/5 group-hover:bg-brand-pink/10 text-brand-pink rounded-xl flex items-center justify-center transition-colors">
               ${Icon('book-open', 24)}
             </div>
-            <h3 class="text-sm font-extrabold text-gray-800 dark:text-gray-200 uppercase tracking-wider">${course}</h3>
+            <h3 class="text-sm font-extrabold text-gray-800 dark:text-gray-200 uppercase tracking-wider line-clamp-1">${course}</h3>
           </div>
         `).join('');
 
@@ -836,47 +843,43 @@
         const current = state.previewImageIndex + 1;
 
         return `
-          <div class="fixed inset-0 z-[200] flex items-center justify-center bg-black/95 p-4 md:p-12 transition-all backdrop-blur-xl" onclick="actions.closePreview()">
-            <div class="relative w-full h-full flex items-center justify-center">
-               <!-- Header Info -->
-               <div class="absolute top-0 left-0 right-0 p-4 flex justify-between items-center text-white z-[210] pointer-events-none">
-                 <div class="bg-black/50 backdrop-blur-md px-4 py-2 rounded-full text-sm font-bold tracking-widest uppercase">
-                   ${state.selectedCourse} (${current} / ${total})
-                 </div>
-                 <button onclick="actions.closePreview(); event.stopPropagation();" class="p-3 text-white bg-white/10 hover:bg-white/20 rounded-full transition-colors pointer-events-auto">
-                   ${Icon('x', 24)}
-                 </button>
-               </div>
-
-               <!-- Image and Navigation Grid -->
-               <div class="w-full h-full grid grid-cols-[auto_1fr_auto] items-center gap-4">
-                 
-                 <!-- Prev Button -->
-                 <div class="flex items-center justify-center h-full">
-                    <button onclick="actions.prevPreviewImage(event)" class="nav-btn p-4 md:p-6 text-white bg-white/10 hover:bg-white/20 rounded-full transition-all flex items-center justify-center shadow-lg hover:scale-110">
-                      ${Icon('chevron-left', 32)}
-                    </button>
-                 </div>
-
-                 <!-- Preview Image -->
-                 <div class="w-full h-full flex items-center justify-center overflow-hidden">
-                    <img src="${currentUrl}" class="max-w-full max-h-[80vh] object-contain preview-anim shadow-2xl rounded-sm" onclick="event.stopPropagation()">
-                 </div>
-
-                 <!-- Next Button -->
-                 <div class="flex items-center justify-center h-full">
-                    <button onclick="actions.nextPreviewImage(event)" class="nav-btn p-4 md:p-6 text-white bg-white/10 hover:bg-white/20 rounded-full transition-all flex items-center justify-center shadow-lg hover:scale-110">
-                      ${Icon('chevron-right', 32)}
-                    </button>
-                 </div>
-
-               </div>
-
-               <!-- Bottom Helper Info -->
-               <div class="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/50 text-[10px] font-bold uppercase tracking-[0.3em] pointer-events-none">
-                 Use Arrow Keys to Navigate
-               </div>
+          <div class="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-black/95 transition-all backdrop-blur-xl" onclick="actions.closePreview()">
+            
+            <!-- Header Overlay -->
+            <div class="absolute top-0 left-0 right-0 p-4 md:p-6 flex justify-between items-center text-white z-[210]">
+              <div class="bg-black/40 backdrop-blur-lg px-4 py-2 rounded-full text-xs md:text-sm font-bold tracking-[0.2em] uppercase border border-white/10">
+                ${state.selectedCourse} — ${current} of ${total}
+              </div>
+              <button onclick="actions.closePreview(); event.stopPropagation();" class="p-3 text-white bg-white/10 hover:bg-white/20 rounded-full transition-colors active:scale-90">
+                ${Icon('x', 24)}
+              </button>
             </div>
+
+            <!-- Main Content Area -->
+            <div class="relative w-full h-full flex items-center justify-center px-4">
+              
+              <!-- Prev Button (Large clickable area) -->
+              <button onclick="actions.prevPreviewImage(event)" class="nav-btn absolute left-4 md:left-8 z-[220] p-4 md:p-6 text-white bg-white/5 hover:bg-white/20 rounded-full backdrop-blur-sm transition-all shadow-2xl hover:scale-110 active:scale-95">
+                ${Icon('chevron-left', 32)}
+              </button>
+
+              <!-- Image Container -->
+              <div class="w-full h-full flex items-center justify-center" onclick="event.stopPropagation()">
+                <img src="${currentUrl}" class="max-w-full max-h-[85vh] object-contain preview-anim shadow-[0_0_50px_rgba(0,0,0,0.5)] rounded-sm" alt="Preview">
+              </div>
+
+              <!-- Next Button (Large clickable area) -->
+              <button onclick="actions.nextPreviewImage(event)" class="nav-btn absolute right-4 md:right-8 z-[220] p-4 md:p-6 text-white bg-white/5 hover:bg-white/20 rounded-full backdrop-blur-sm transition-all shadow-2xl hover:scale-110 active:scale-95">
+                ${Icon('chevron-right', 32)}
+              </button>
+
+            </div>
+
+            <!-- Footer Hint -->
+            <div class="absolute bottom-6 left-1/2 -translate-x-1/2 text-white/40 text-[9px] font-bold uppercase tracking-[0.4em] pointer-events-none hidden md:block">
+              Use Left / Right Arrows to navigate
+            </div>
+
           </div>
         `;
       }
