@@ -84,7 +84,7 @@
       }
       body.dark {
         background: #111827;
-        background: linear-gradient(135deg, #0f172a 0%, #111827 50%, #1e1b4b 100%);
+        background: linear-gradient(135deg, #0f172a 0%, #111827 50%, #111827 100%);
       }
       .no-scrollbar::-webkit-scrollbar { display: none; }
       .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
@@ -133,6 +133,14 @@
       }
       .course-card:hover {
         transform: translateY(-4px);
+      }
+
+      .preview-anim {
+        animation: previewZoom 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      @keyframes previewZoom {
+        from { transform: scale(0.8); opacity: 0; }
+        to { transform: scale(1); opacity: 1; }
       }
     </style>
   </head>
@@ -202,6 +210,7 @@
         selectedCourse: null,
         courseImages: [],
         isLoadingGallery: false,
+        previewImageUrl: null, // New state for image lightbox
 
         // Reminder State
         isReminderModalOpen: false, 
@@ -557,6 +566,14 @@
           state.selectedCourse = null;
           state.courseImages = [];
           render();
+        },
+        openPreview: (url) => {
+          state.previewImageUrl = url;
+          render();
+        },
+        closePreview: () => {
+          state.previewImageUrl = null;
+          render();
         }
       };
 
@@ -753,7 +770,7 @@
 
         const imagesHtml = state.courseImages.map(url => `
           <div class="bg-gray-200 dark:bg-gray-700 rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-shadow">
-            <img src="${url}" alt="Course Material" loading="lazy" class="w-full h-full object-cover aspect-[3/4] cursor-pointer" onclick="window.open('${url}', '_blank')">
+            <img src="${url}" alt="Course Material" loading="lazy" class="w-full h-full object-cover aspect-[3/4] cursor-pointer" onclick="actions.openPreview('${url}')">
           </div>
         `).join('');
 
@@ -779,6 +796,20 @@
                   </div>
                 `}
               </div>
+            </div>
+          </div>
+        `;
+      }
+
+      function renderImagePreview() {
+        if (!state.previewImageUrl) return '';
+        return `
+          <div class="fixed inset-0 z-[200] flex items-center justify-center bg-black/95 p-4 md:p-12 transition-all backdrop-blur-xl" onclick="actions.closePreview()">
+            <div class="relative w-full h-full flex items-center justify-center">
+               <button onclick="actions.closePreview(); event.stopPropagation();" class="absolute top-0 right-0 p-4 text-white bg-white/10 hover:bg-white/20 rounded-full transition-colors z-[210]">
+                 ${Icon('x', 32)}
+               </button>
+               <img src="${state.previewImageUrl}" class="max-w-full max-h-full object-contain preview-anim shadow-2xl rounded-sm" onclick="event.stopPropagation()">
             </div>
           </div>
         `;
@@ -892,6 +923,7 @@
           ${renderAdminModal()}
           ${renderReminderModal()}
           ${renderGalleryModal()}
+          ${renderImagePreview()}
         `;
         lucide.createIcons();
       }
