@@ -51,6 +51,17 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Welcome 2026 Overlay -->
+    <div id="welcome2026-modal">
+        <button id="welcome2026-close">✕</button>
+    
+        <iframe 
+            src="welcome2026.html"
+            title="Welcome 2026"
+        ></iframe>
+    </div>
+<!-- jdjjfjrf jrnrjnrjnr rfjrrr============================================================================================================--->
     
     <script>
       tailwind.config = {
@@ -73,6 +84,50 @@
       }
     </script>
     <style>
+      /* Overlay ============================================================================================================================*/
+      #welcome2026-modal {
+          position: fixed;
+          inset: 0;
+          background: rgba(0,0,0,0.85);
+          z-index: 99999;
+      }
+      
+      /* iframe */
+      #welcome2026-modal iframe {
+          width: 100%;
+          height: 100%;
+          border: none;
+      }
+      
+      /* Close Button */
+      #welcome2026-close {
+          position: fixed;
+          top: 15px;
+          right: 15px;
+          width: 44px;
+          height: 44px;
+          border-radius: 50%;
+          border: none;
+          font-size: 22px;
+          font-weight: bold;
+          background: red;
+          color: white;
+          cursor: pointer;
+          z-index: 100000;
+      }
+      
+      #welcome2026-close:hover {
+          background: darkred;
+          transform: scale(1.1);
+      }
+
+      /* Overlay ============================================================================================================================*/
+
+
+
+
+
+      
       body {
         transition: background-color 0.3s ease;
         min-height: 100vh;
@@ -171,6 +226,17 @@
 
     <!-- Application Logic -->
     <script>
+
+
+
+
+
+
+      /*jfjjrjrrnhbhrjbrbrhjb=======================================================================================================*/
+      document.getElementById("welcome2026-close").onclick = function () {
+          document.getElementById("welcome2026-modal").style.display = "none";
+      };
+
       // --- Configuration ---
       const REPO_OWNER = "page-host";
       const REPO_NAME = "4AM-EVENTS";
